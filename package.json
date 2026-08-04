@@ -1,0 +1,22 @@
+{
+  "name": "aqua-haul",
+  "version": "1.0.0",
+  "private": true,
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "next": "^16.2.0",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "lucide-react": "latest",
+    "@neondatabase/serverless": "^0.10.0",
+    "resend": "^4.0.0"
+  }
+}
