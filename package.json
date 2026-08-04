@@ -1,0 +1,27 @@
+{
+  "name": "aqua-haul",
+  "version": "1.0.0",
+  "private": true,
+  "engines": {
+    "node": ">=20 <25"
+  },
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
+  },
+  "dependencies": {
+    "@neondatabase/serverless": "^0.10.0",
+    "lucide-react": "latest",
+    "next": "^16.2.0",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "react-icons": "^5.7.0",
+    "resend": "^4.0.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.1.0",
+    "postcss": "^8.5.0",
+    "tailwindcss": "^4.1.0"
+  }
+}
