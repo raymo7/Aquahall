@@ -1,0 +1,363 @@
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..800&family=Cinzel:wght@600;700&family=Manrope:wght@400;500;600;700;800&display=swap');
+
+:root {
+  --ink: #241f1a;
+  --ink-muted: #5b5347;
+  --teal-900: #123130;
+  --teal-700: #1f4f4f;
+  --teal-600: #2a6866;
+  --teal-100: #dceeec;
+  --terracotta-600: #c85a2e;
+  --terracotta-500: #d97142;
+  --terracotta-100: #f6dcc8;
+  --cream-50: #fdf8ed;
+  --cream-100: #f8eed2;
+  --gold-400: #e8b84e;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  overflow-x: hidden;
+}
+
+html,
+body {
+  min-height: 100%;
+  padding: 0;
+  margin: 0;
+  overflow-x: hidden;
+  background: var(--cream-50);
+  color: var(--ink);
+}
+
+body {
+  font-family: 'Manrope', sans-serif;
+  line-height: 1.5;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+img,
+svg,
+video,
+canvas {
+  display: block;
+  max-width: 100%;
+}
+
+a {
+  color: inherit;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+textarea {
+  resize: vertical;
+}
+
+::selection {
+  background: var(--teal-700);
+  color: #fff;
+}
+
+.font-display {
+  font-family: 'Fraunces', serif;
+}
+
+.font-label {
+  font-family: 'Cinzel', serif;
+  letter-spacing: 0.14em;
+}
+
+.font-body {
+  font-family: 'Manrope', sans-serif;
+}
+
+.field {
+  width: 100%;
+  min-height: 48px;
+  border: 2px solid var(--teal-100);
+  border-radius: 14px;
+  padding: 12px 16px;
+  outline: none;
+  background: #fff;
+  color: var(--ink);
+  font-family: 'Manrope', sans-serif;
+  font-size: 15px;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s,
+    background 0.15s;
+}
+
+.field::placeholder {
+  color: #80776b;
+}
+
+.field:hover {
+  border-color: #b9d7d4;
+}
+
+.field:focus {
+  border-color: var(--teal-600);
+  box-shadow: 0 0 0 3px rgba(42, 104, 102, 0.15);
+}
+
+.btn-primary {
+  border: none;
+  border-radius: 999px;
+  padding: 14px 30px;
+  background: var(--terracotta-600);
+  box-shadow: 0 8px 22px rgba(200, 90, 46, 0.3);
+  color: #fff;
+  font-family: 'Manrope', sans-serif;
+  font-weight: 700;
+  text-decoration: none;
+  transition:
+    transform 0.15s,
+    background 0.15s,
+    box-shadow 0.15s;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  background: var(--terracotta-500);
+  box-shadow: 0 11px 28px rgba(200, 90, 46, 0.34);
+}
+
+.btn-primary:disabled {
+  transform: none;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.btn-primary:focus-visible,
+.btn-primary-sm:focus-visible,
+.btn-outline:focus-visible {
+  outline: 3px solid var(--gold-400);
+  outline-offset: 2px;
+}
+
+.btn-primary-sm {
+  border: none;
+  border-radius: 999px;
+  padding: 9px 22px;
+  background: var(--terracotta-600);
+  color: #fff;
+  font-family: 'Manrope', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  transition: background 0.15s;
+}
+
+.btn-primary-sm:hover {
+  background: var(--terracotta-500);
+}
+
+.btn-outline {
+  border: 2px solid var(--cream-50);
+  border-radius: 999px;
+  padding: 12px 28px;
+  background: transparent;
+  color: var(--cream-50);
+  font-family: 'Manrope', sans-serif;
+  font-weight: 700;
+  transition: background 0.15s;
+}
+
+.btn-outline:hover {
+  background: rgba(253, 248, 237, 0.12);
+}
+
+.btn-ghost-teal {
+  border: none;
+  border-radius: 999px;
+  padding: 11px 24px;
+  background: var(--teal-100);
+  color: var(--teal-900);
+  font-family: 'Manrope', sans-serif;
+  font-weight: 700;
+  transition:
+    background 0.15s,
+    color 0.15s;
+}
+
+.btn-ghost-teal:hover {
+  background: var(--teal-600);
+  color: #fff;
+}
+
+.pick-card {
+  width: 100%;
+  border: 2px solid var(--teal-100);
+  border-radius: 20px;
+  background: #fff;
+  text-align: left;
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    border-color 0.18s ease;
+}
+
+.pick-card:hover {
+  transform: translateY(-3px);
+}
+
+.pick-card.active {
+  border-color: var(--teal-700);
+  box-shadow: 0 10px 28px rgba(31, 79, 79, 0.22);
+  animation: cardPop 0.32s ease;
+}
+
+.chip {
+  border: 2px solid var(--teal-100);
+  border-radius: 999px;
+  padding: 9px 16px;
+  background: #fff;
+  color: var(--teal-900);
+  font-family: 'Manrope', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  transition:
+    background 0.15s,
+    color 0.15s,
+    border-color 0.15s,
+    transform 0.15s;
+}
+
+.chip:hover {
+  border-color: var(--teal-600);
+}
+
+.chip.active {
+  border-color: var(--teal-700);
+  background: var(--teal-700);
+  color: #fff;
+  animation: chipPop 0.28s ease;
+}
+
+@keyframes cardPop {
+  0% { transform: scale(0.97); }
+  60% { transform: scale(1.015); }
+  100% { transform: scale(1); }
+}
+
+@keyframes chipPop {
+  0% { transform: scale(0.9); }
+  60% { transform: scale(1.08); }
+  100% { transform: scale(1); }
+}
+
+@keyframes checkIn {
+  from { opacity: 0; transform: scale(0.4) rotate(-10deg); }
+  to { opacity: 1; transform: scale(1) rotate(0); }
+}
+
+.check-in {
+  animation: checkIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes totalPop {
+  0% { transform: scale(0.92); opacity: 0.5; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.total-pop {
+  animation: totalPop 0.28s ease;
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fadeUp {
+  animation: fadeUp 0.8s ease both;
+}
+
+@keyframes drawPath {
+  to { stroke-dashoffset: 0; }
+}
+
+.route-path {
+  stroke-dasharray: 340;
+  stroke-dashoffset: 340;
+  animation: drawPath 2s ease-out 0.4s forwards;
+}
+
+@keyframes sunSpin {
+  to { transform: rotate(360deg); }
+}
+
+.sun-spin {
+  transform-origin: 110px 110px;
+  animation: sunSpin 70s linear infinite;
+}
+
+@keyframes riseSteam {
+  0% { transform: translateY(4px); opacity: 0.2; }
+  50% { opacity: 0.55; }
+  100% { transform: translateY(-6px); opacity: 0.2; }
+}
+
+.steam-line {
+  animation: riseSteam 3s ease-in-out infinite;
+}
+
+@keyframes floatBubble {
+  0%,
+  100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+
+.bubble {
+  animation: floatBubble 2.6s ease-in-out infinite;
+}
+
+@media (max-width: 640px) {
+  .btn-primary,
+  .btn-outline,
+  .btn-ghost-teal {
+    min-height: 48px;
+  }
+
+  .field {
+    font-size: 16px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .animate-fadeUp,
+  .route-path,
+  .sun-spin,
+  .steam-line,
+  .bubble,
+  .pick-card.active,
+  .chip.active,
+  .check-in,
+  .total-pop {
+    animation: none !important;
+  }
+
+  .route-path {
+    stroke-dashoffset: 0;
+  }
+}
