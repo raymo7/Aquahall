@@ -1,123 +1,445 @@
-# Aqua Haul — booking site
+# Aqua Haul
 
-Mobile car wash booking site for Kottayam district. Booking, pricing, enquiries,
-a Google Pay / UPI QR payment flow, and an admin dashboard — with real email
-confirmations and no customer data exposed publicly.
+Aqua Haul is a mobile-first car wash booking website built with Next.js, Neon PostgreSQL, Resend, WhatsApp, and UPI payment support.
 
-## Stack
+The platform allows customers to choose a vehicle category, select a wash package, schedule a service, choose between advance payment or onsite payment, and send the complete booking details to Aqua Haul through WhatsApp.
 
-- **Next.js 16** (App Router) — site + API routes in one project
-- **Neon Postgres** — stores bookings and enquiries (nothing client-readable)
-- **Resend** — sends booking and payment confirmation emails
-- **Vercel** — hosting
+## Features
 
-## 1. Install
+- Mobile-first responsive design
+- Multi-step booking experience
+- 5-seater and 7-seater pricing
+- Standard and Premium packages
+- Optional add-on services
+- Live booking total
+- Date and time slot selection
+- Exact 10-digit phone validation
+- Pay Advance or Pay Onsite
+- Google Pay and UPI deep-link support
+- Downloadable UPI QR code
+- WhatsApp booking confirmation with full customer details
+- Neon PostgreSQL booking storage
+- Resend owner email notifications
+- Booking reference generation
+- Admin booking management
+- Mark bookings as paid or completed
+- Gallery, pricing, enquiry, payment, and contact sections
+- Sticky mobile navigation
+- Back-to-top navigation
+- Responsive header and mobile menu
+
+## Pricing
+
+| Vehicle category | Standard | Premium |
+|---|---:|---:|
+| 5-Seater | ₹800 | ₹1,000 |
+| 7-Seater | ₹900 | ₹1,100 |
+
+Additional services may increase the final amount.
+
+## Technology Stack
+
+- [Next.js](https://nextjs.org/)
+- React
+- Tailwind CSS
+- Neon PostgreSQL
+- Resend
+- Vercel
+- Lucide React
+- React Icons
+- WhatsApp `wa.me` links
+- UPI deep links
+
+## Project Structure
+
+```text
+Aquahall/
+├── app/
+│   ├── api/
+│   │   ├── booking/
+│   │   ├── enquiry/
+│   │   ├── mark-paid/
+│   │   └── payment-qr/
+│   ├── globals.css
+│   ├── layout.js
+│   └── page.js
+├── components/
+│   ├── AdminPanel.jsx
+│   ├── BackToTop.jsx
+│   ├── BookingForm.jsx
+│   ├── EnquiryForm.jsx
+│   ├── Gallery.jsx
+│   ├── Hero.jsx
+│   ├── MobileBottomNav.jsx
+│   ├── PaymentPanel.jsx
+│   ├── PricingSection.jsx
+│   ├── SiteFooter.jsx
+│   ├── SiteHeader.jsx
+│   └── StandalonePayment.jsx
+├── lib/
+│   ├── db.js
+│   ├── email.js
+│   ├── pricing.js
+│   └── upi.js
+├── public/
+│   ├── gallery/
+│   ├── icon.png
+│   └── logo.jpg
+├── schema.sql
+├── package.json
+├── postcss.config.mjs
+└── README.md
+```
+
+## Local Development
+
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/raymo7/Aquahall.git
+cd Aquahall
+```
+
+### 2. Install dependencies
 
 ```bash
 npm install
 ```
 
-## 2. Set up the database
+### 3. Create an environment file
 
-1. Push this project to GitHub first (see step 6), then in the Vercel dashboard:
-   Project → Storage → Marketplace Database Providers → **Neon** → Connect.
-   This auto-fills `DATABASE_URL` in your Vercel project's environment variables.
-   (Building locally first? Create a free project at https://neon.tech instead and
-   copy its connection string into `.env.local`.)
-2. Open the Neon SQL editor (via Vercel's Storage tab, or neon.tech directly) and
-   run everything in `schema.sql` once — this creates the `bookings` and
-   `enquiries` tables.
+Create:
 
-## 3. Set up email (Resend)
-
-1. Create a free account at https://resend.com — 3,000 emails/month, 100/day,
-   no card required.
-2. Copy your API key into `RESEND_API_KEY`.
-3. To start, `EMAIL_FROM` can stay as `Aqua Haul <onboarding@resend.dev>` —
-   Resend's own shared sender, works immediately. Once you register a real
-   domain (see the domain note below), verify it in Resend and switch
-   `EMAIL_FROM` to something like `Aqua Haul <bookings@yourdomain.in>` for
-   better deliverability and a more trustworthy sender name.
-
-## 4. Set the admin password and session secret
-
-```bash
-node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+```text
+.env.local
 ```
 
-Use the output as `SESSION_SECRET`. Pick your own `ADMIN_PASSWORD` — this is
-what gates the "View bookings" screen in the site footer.
+Add:
 
-## 5. Environment variables
+```env
+DATABASE_URL=your_neon_postgresql_connection_string
+RESEND_API_KEY=your_resend_api_key
+EMAIL_FROM=Aqua Haul <onboarding@resend.dev>
+SESSION_SECRET=your_64_character_secret
 
-Copy `.env.example` to `.env.local` for local development and fill in the
-values from steps 2–4. For production, add the same variables in Vercel:
-Project Settings → Environment Variables. Never commit `.env.local`.
+NEXT_PUBLIC_UPI_ID=your_upi_id
+NEXT_PUBLIC_UPI_PAYEE_NAME=Aqua Haul
+```
+
+Do not commit `.env.local`.
+
+### 4. Configure the database
+
+Create a Neon project, open the Neon SQL Editor, and run:
+
+```text
+schema.sql
+```
+
+This creates or updates the required booking and enquiry tables.
+
+### 5. Start the development server
 
 ```bash
 npm run dev
 ```
 
-## 6. Push to GitHub
+Open:
 
-This project already has a local git commit included (`git log` to see it).
-Create an empty repository on GitHub (github.com/new — don't initialize it
-with a README, so there's nothing to conflict with), then from inside the
-project folder:
-
-```bash
-git remote add origin https://github.com/YOUR_USERNAME/aqua-haul.git
-git branch -M main
-git push -u origin main
+```text
+http://localhost:3000
 ```
 
-## 7. Deploy
+## Vercel Deployment
 
-Import the GitHub repo at https://vercel.com/new, add the environment
-variables from step 5, and deploy. Every future `git push` redeploys
-automatically.
+1. Push the project to GitHub.
+2. Import the repository into Vercel.
+3. Add all required environment variables.
+4. Deploy the project.
+5. Run `schema.sql` in the Neon database connected through `DATABASE_URL`.
 
-## 8. Domain
+Required Vercel environment variables:
 
-`kerala.com` is not a subdomain host (checked — no such business-subdomain
-service exists, unlike blogspot.com or vercel.app). Register a real domain
-— e.g. `aquahaulktym.in` or `.com` — through any registrar (GoDaddy, BigRock,
-Zybosys, or others), then point it at the Vercel project under Project
-Settings → Domains.
+| Variable | Description |
+|---|---|
+| `DATABASE_URL` | Neon PostgreSQL connection string |
+| `RESEND_API_KEY` | Resend API key |
+| `EMAIL_FROM` | Resend sender address |
+| `SESSION_SECRET` | Random 64-character session secret |
+| `NEXT_PUBLIC_UPI_ID` | Business UPI ID |
+| `NEXT_PUBLIC_UPI_PAYEE_NAME` | Payee name shown in UPI apps |
 
-## How payment confirmation actually works
+Recommended sender while using Resend's free test domain:
 
-The Google Pay QR is a direct UPI transfer — the same as someone scanning a
-personal QR code — not a payment gateway. **The site cannot verify that a
-payment actually happened.** "Marked as paid" (customer button, or you doing
-it from the dashboard) is a notification trigger, not proof of payment.
-Before relying on a booking as paid, check the transaction actually landed
-in your own Google Pay / bank statement.
+```env
+EMAIL_FROM=Aqua Haul <onboarding@resend.dev>
+```
 
-## Security notes
+## Changing Business Details
 
-- Customer and booking data lives only in Postgres, read only by API routes
-  running on the server. The browser never receives it unless the admin
-  password check on `/api/admin/login` succeeds.
-- The admin session is a signed, httpOnly, `secure`, `sameSite=strict`
-  cookie — it can't be read or forged from the browser without knowing
-  `SESSION_SECRET`, and expires automatically after 12 hours.
-- Prices are recalculated server-side from the fixed price list in
-  `lib/pricing.js` on every booking — a tampered request from the browser
-  can't set an arbitrary amount.
-- Booking and enquiry forms include a honeypot field and basic server-side
-  validation to cut down on spam; there's no CAPTCHA or rate limiting yet —
-  worth adding (e.g. Vercel's built-in Bot Protection, or Upstash Ratelimit)
-  if the public forms start attracting abuse.
-- All secrets (`DATABASE_URL`, `RESEND_API_KEY`, `ADMIN_PASSWORD`,
-  `SESSION_SECRET`) stay server-side — only variables prefixed
-  `NEXT_PUBLIC_` are ever sent to the browser, and none of the secrets
-  above are.
+### Owner notification email
 
-## SMS
+Edit:
 
-Left out deliberately. Sending transactional SMS to Indian numbers requires
-TRAI DLT registration first (business PAN, GST/address proof, sender ID and
-message templates all pre-approved) before any provider — Twilio included —
-will deliver. Email covers the same confirmations without that hurdle; SMS
-can be added later once DLT registration is done.
+```text
+lib/email.js
+```
+
+Update:
+
+```js
+const OWNER_EMAILS = ['rayrey311@gmail.com'];
+```
+
+### WhatsApp booking number
+
+Edit:
+
+```text
+components/BookingForm.jsx
+```
+
+Update the number using country code without `+`, spaces, or hyphens:
+
+```js
+const WHATSAPP_NUMBER = '918921167141';
+```
+
+### UPI ID
+
+Recommended method:
+
+```env
+NEXT_PUBLIC_UPI_ID=yourname@upi
+```
+
+You can also change the fallback in:
+
+```text
+lib/upi.js
+```
+
+### Payee name
+
+```env
+NEXT_PUBLIC_UPI_PAYEE_NAME=Aqua Haul
+```
+
+### Gallery images
+
+Upload real photos into:
+
+```text
+public/gallery/
+```
+
+Example:
+
+```text
+public/gallery/foam-wash.jpg
+public/gallery/interior-detailing.jpg
+public/gallery/engine-cleaning.jpg
+```
+
+Then update:
+
+```text
+components/Gallery.jsx
+```
+
+## Booking Flow
+
+1. Customer selects vehicle type.
+2. Customer chooses Standard or Premium.
+3. Customer selects optional extras.
+4. Customer enters personal, vehicle, schedule, and address details.
+5. Customer selects:
+   - Pay Onsite
+   - Pay Advance
+6. Booking is stored in Neon.
+7. WhatsApp opens with the complete booking information.
+8. Aqua Haul verifies the booking and payment manually.
+
+## Payment Flow
+
+The website supports UPI payment through:
+
+- Google Pay deep links
+- Android UPI intents
+- iPhone Google Pay links
+- Downloadable QR code
+- Copyable UPI ID
+
+Important:
+
+The current implementation launches a UPI app but does not automatically verify whether payment succeeded. Payment confirmation remains manual unless a payment gateway with webhook support is integrated.
+
+Suitable future gateways include:
+
+- Razorpay
+- Cashfree
+- PhonePe Payment Gateway
+- PayU
+
+## WhatsApp Behaviour
+
+The booking button saves the booking before opening WhatsApp.
+
+The WhatsApp message can include:
+
+- Booking reference
+- Customer name
+- Phone number
+- Vehicle category
+- Vehicle model
+- Package
+- Add-ons
+- Date
+- Time
+- Address
+- Amount
+- Payment method
+- Notes
+
+A website cannot send a WhatsApp message automatically from the customer's account. The customer must press **Send** inside WhatsApp.
+
+## Resend Limitation
+
+When using:
+
+```text
+onboarding@resend.dev
+```
+
+Resend may only deliver emails to the email address registered with the Resend account.
+
+To send confirmation emails to arbitrary customer addresses, verify a custom sending domain in Resend.
+
+## Mobile UX
+
+The mobile version includes:
+
+- Sticky header
+- Full-screen mobile menu
+- Bottom navigation
+- Central Book button
+- Active section highlighting
+- Back-to-top button
+- Smooth section scrolling
+- Safe-area spacing for iPhone
+- Auto-scroll to the top of each booking step
+- Reduced section spacing on mobile
+
+## Useful Commands
+
+Run development server:
+
+```bash
+npm run dev
+```
+
+Create a production build:
+
+```bash
+npm run build
+```
+
+Run production server:
+
+```bash
+npm start
+```
+
+Commit changes:
+
+```bash
+git add .
+git commit -m "Update Aqua Haul"
+git push origin main
+```
+
+## Troubleshooting
+
+### Booking fails
+
+Check:
+
+- `DATABASE_URL` exists in Vercel
+- `schema.sql` was run in the correct Neon project
+- Required columns exist
+- Vercel logs show no database errors
+
+### Email is not received
+
+Check:
+
+- `RESEND_API_KEY`
+- `EMAIL_FROM`
+- Resend dashboard logs
+- Spam and Promotions folders
+- Recipient restrictions for `resend.dev`
+
+### UPI app does not open
+
+Try:
+
+- Android Chrome
+- iPhone with Google Pay installed
+- Downloading the QR
+- Copying the UPI ID manually
+
+### Favicon does not update
+
+Use:
+
+```text
+app/icon.png
+```
+
+Then redeploy and hard-refresh the browser because favicon files are often cached.
+
+## Security Notes
+
+- Never commit `.env.local`
+- Never expose `DATABASE_URL`
+- Never expose `RESEND_API_KEY`
+- Rotate any secret accidentally posted publicly
+- Keep all database writes inside server-side API routes
+- Validate customer input on both client and server
+- Verify payments manually until a payment gateway is integrated
+
+## Future Improvements
+
+- Dedicated `/book` route
+- Dedicated `/gallery` route
+- Customer booking status page
+- Payment gateway webhook integration
+- Admin authentication
+- Booking filters and analytics
+- Customer reviews
+- Coupon codes
+- Subscription wash plans
+- Loyalty and referral programme
+- Automated WhatsApp Business Platform notifications
+
+## License
+
+This project is intended for Aqua Haul business use.
+
+## Contact
+
+**Aqua Haul**
+
+Mobile car wash service across Kottayam district.
+
+Email:
+
+```text
+aquahaul360@gmail.com
+```
+
+WhatsApp booking number:
+
+```text
++91 89211 67141
+```
