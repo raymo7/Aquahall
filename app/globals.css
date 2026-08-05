@@ -361,3 +361,159 @@ textarea {
     stroke-dashoffset: 0;
   }
 }
+
+/* Aqua Haul mobile navigation and compact layout */
+section,
+footer {
+  scroll-margin-top: 76px;
+  }
+
+  .site-header--compact .site-header {
+    min-height: 56px;
+    }
+
+    .mobile-menu-link {
+      display: flex;
+        width: 100%;
+          min-height: 48px;
+            align-items: center;
+              border-radius: 14px;
+                padding: 0 14px;
+                  color: var(--teal-900);
+                    font-family: 'Manrope', sans-serif;
+                      font-size: 15px;
+                        font-weight: 700;
+                          text-align: left;
+                          }
+
+                          .mobile-menu-link:hover,
+                          .mobile-menu-link:focus-visible {
+                            background: var(--teal-100);
+                            }
+
+                            .mobile-bottom-nav {
+                              border-top: 1px solid rgba(18, 49, 48, 0.12);
+                                background: rgba(253, 248, 237, 0.96);
+                                  box-shadow: 0 -10px 30px rgba(18, 49, 48, 0.14);
+                                    backdrop-filter: blur(18px);
+                                      -webkit-backdrop-filter: blur(18px);
+                                      }
+
+                                      .mobile-nav-item {
+                                        position: relative;
+                                          display: flex;
+                                            min-height: 53px;
+                                              flex-direction: column;
+                                                align-items: center;
+                                                  justify-content: flex-end;
+                                                    gap: 3px;
+                                                      border-radius: 16px;
+                                                        color: var(--ink-muted);
+                                                          font-family: 'Manrope', sans-serif;
+                                                            font-size: 10px;
+                                                              font-weight: 700;
+                                                              }
+
+                                                              .mobile-nav-icon {
+                                                                display: flex;
+                                                                  height: 28px;
+                                                                    align-items: center;
+                                                                      justify-content: center;
+                                                                      }
+
+                                                                      .mobile-nav-item.is-active {
+                                                                        color: var(--teal-700);
+                                                                        }
+
+                                                                        .mobile-nav-item.is-active:not(.mobile-nav-primary)::before {
+                                                                          position: absolute;
+                                                                            top: -2px;
+                                                                              width: 22px;
+                                                                                height: 3px;
+                                                                                  border-radius: 999px;
+                                                                                    background: var(--terracotta-600);
+                                                                                      content: '';
+                                                                                      }
+
+                                                                                      .mobile-nav-primary {
+                                                                                        transform: translateY(-14px);
+                                                                                          color: #fff;
+                                                                                          }
+
+                                                                                          .mobile-nav-primary .mobile-nav-icon {
+                                                                                            width: 52px;
+                                                                                              height: 52px;
+                                                                                                border: 4px solid var(--cream-50);
+                                                                                                  border-radius: 999px;
+                                                                                                    background: var(--terracotta-600);
+                                                                                                      box-shadow: 0 8px 20px rgba(200, 90, 46, 0.34);
+                                                                                                      }
+
+                                                                                                      .mobile-nav-primary span:last-child {
+                                                                                                        color: var(--teal-900);
+                                                                                                        }
+
+                                                                                                        .mobile-nav-primary.is-active .mobile-nav-icon {
+                                                                                                          background: var(--teal-700);
+                                                                                                          }
+
+                                                                                                          .back-to-top {
+                                                                                                            position: fixed;
+                                                                                                              right: 16px;
+                                                                                                                bottom: 92px;
+                                                                                                                  z-index: 45;
+                                                                                                                    display: flex;
+                                                                                                                      width: 43px;
+                                                                                                                        height: 43px;
+                                                                                                                          align-items: center;
+                                                                                                                            justify-content: center;
+                                                                                                                              border: 1px solid rgba(255,255,255,0.18);
+                                                                                                                                border-radius: 999px;
+                                                                                                                                  background: var(--teal-900);
+                                                                                                                                    box-shadow: 0 8px 24px rgba(18,49,48,0.28);
+                                                                                                                                      color: #fff;
+                                                                                                                                      }
+
+                                                                                                                                      @media (max-width: 767px) {
+                                                                                                                                        body {
+                                                                                                                                            padding-bottom: calc(72px + env(safe-area-inset-bottom));
+                                                                                                                                              }
+
+                                                                                                                                                section[id]:not(#home) {
+                                                                                                                                                    padding-top: 3.5rem !important;
+                                                                                                                                                        padding-bottom: 3.5rem !important;
+                                                                                                                                                          }
+
+                                                                                                                                                            section[id] > div {
+                                                                                                                                                                max-width: min(100%, 42rem);
+                                                                                                                                                                  }
+
+                                                                                                                                                                    #pricing,
+                                                                                                                                                                      #gallery,
+                                                                                                                                                                        #booking,
+                                                                                                                                                                          #payment,
+                                                                                                                                                                            #enquiry {
+                                                                                                                                                                                scroll-margin-top: 68px;
+                                                                                                                                                                                  }
+
+                                                                                                                                                                                    #booking .rounded-3xl,
+                                                                                                                                                                                      #enquiry .rounded-3xl {
+                                                                                                                                                                                          border-radius: 22px;
+                                                                                                                                                                                            }
+
+                                                                                                                                                                                              #booking .p-5,
+                                                                                                                                                                                                #enquiry .p-5 {
+                                                                                                                                                                                                    padding: 1.15rem;
+                                                                                                                                                                                                      }
+
+                                                                                                                                                                                                        #contact {
+                                                                                                                                                                                                            padding-bottom: calc(6.5rem + env(safe-area-inset-bottom)) !important;
+                                                                                                                                                                                                              }
+                                                                                                                                                                                                              }
+
+                                                                                                                                                                                                              @media (min-width: 768px) {
+                                                                                                                                                                                                                .back-to-top {
+                                                                                                                                                                                                                    right: 24px;
+                                                                                                                                                                                                                        bottom: 24px;
+                                                                                                                                                                                                                          }
+                                                                                                                                                                                                                          }
