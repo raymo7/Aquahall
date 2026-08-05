@@ -2,50 +2,8 @@
 
 import { useState } from 'react';
 import { Camera, ChevronRight, RotateCcw } from 'lucide-react';
+import { GALLERY_SERVICES } from '../lib/gallery';
 import WaveDivider from './WaveDivider';
-
-const ITEMS = [
-  {
-    key: 'foam',
-    label: 'Foam Wash',
-    description: 'Thick foam lifts road dirt before a careful exterior rinse.',
-    photos: ['/gallery/foam-wash-1.webp', '/gallery/foam-wash-2.webp'],
-  },
-  {
-    key: 'steam',
-    label: 'Steam Wash',
-    description: 'Focused steam reaches tight areas while using less water.',
-    photos: ['/gallery/steam-wash-1.webp', '/gallery/steam-wash-2.webp'],
-  },
-  {
-    key: 'engine',
-    label: 'Engine Cleaning',
-    description: 'Careful cleaning around the engine bay for a fresher finish.',
-    photos: ['/gallery/engine-cleaning-1.webp', '/gallery/engine-cleaning-2.webp'],
-  },
-  {
-    key: 'interior',
-    label: 'Interior Detailing',
-    description: 'Seats, mats, dashboard and hard-to-reach cabin areas refreshed.',
-    photos: [
-      '/gallery/interior-detailing-1.webp',
-      '/gallery/interior-detailing-2.webp',
-      '/gallery/interior-detailing-3.webp',
-    ],
-  },
-  {
-    key: 'ac',
-    label: 'AC & Interior Steaming',
-    description: 'Steam treatment around vents and cabin touchpoints.',
-    photos: ['/gallery/ac-interior-1.webp', '/gallery/ac-interior-2.webp'],
-  },
-  {
-    key: 'heavy',
-    label: 'Heavy Vehicle Wash',
-    description: 'Mobile exterior and cabin cleaning for larger vehicles.',
-    photos: ['/gallery/heavy-vehicle-1.webp', '/gallery/heavy-vehicle-2.webp'],
-  },
-];
 
 function ServiceScene({ type }) {
   const common = {
@@ -192,97 +150,170 @@ function ServiceScene({ type }) {
   );
 }
 
+
 function GalleryCard({ item }) {
   const [slide, setSlide] = useState(0);
-  const totalSlides = item.photos.length + 1;
+  const totalSlides = item.media.length + 1;
   const isScene = slide === 0;
+  const currentMedia = isScene ? null : item.media[slide - 1];
 
   function nextSlide() {
     setSlide((current) => (current + 1) % totalSlides);
   }
 
   return (
-    <article className="gallery-card overflow-hidden rounded-3xl border-2" style={{ borderColor: 'var(--teal-600)', background: 'var(--teal-700)' }}>
-      <button
-        type="button"
-        onClick={nextSlide}
-        className="group block w-full text-left"
-        aria-label={`Show next ${item.label} gallery item`}
+    <article
+      className="gallery-card overflow-hidden rounded-3xl border-2"
+      style={
+        borderColor: 'var(--teal-600)',
+        background: 'var(--teal-700)',
+      }
+    >
+      <div
+        className="group relative aspect-[16/10] overflow-hidden"
+        style={ background: '#174544' }
       >
-        <div className="relative aspect-[16/10] overflow-hidden" style={{ background: '#174544' }}>
-          {isScene ? (
-            <div className="absolute inset-0 flex items-center justify-center p-3">
-              <ServiceScene type={item.key} />
-              <div className="absolute right-3 top-3 rounded-full px-3 py-1.5 text-[11px] font-bold" style={{ background: 'rgba(253,248,237,0.92)', color: 'var(--teal-900)' }}>
-                Animated preview
-              </div>
-            </div>
+        {isScene ? (
+          <button
+            type="button"
+            onClick={nextSlide}
+            className="absolute inset-0 flex w-full items-center justify-center p-3"
+            aria-label={`Open ${item.label} gallery`}
+          >
+            <ServiceScene type={item.key} />
+          </button>
+        ) : currentMedia?.type === 'video' ? (
+          <video
+            key={currentMedia.src}
+            src={currentMedia.src}
+            poster={currentMedia.poster}
+            aria-label={currentMedia.alt || item.label}
+            controls
+            playsInline
+            muted
+            preload="metadata"
+            className="h-full w-full object-cover"
+          />
+        ) : (
+          <button
+            type="button"
+            onClick={nextSlide}
+            className="absolute inset-0 block h-full w-full"
+            aria-label={`Show next ${item.label} gallery item`}
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={currentMedia?.src}
+              alt={currentMedia?.alt || item.label}
+              className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent" />
+          </button>
+        )}
+
+        <button
+          type="button"
+          onClick={nextSlide}
+          className="absolute bottom-3 right-3 z-10 flex h-10 w-10 items-center justify-center rounded-full shadow-lg"
+          style={ background: 'var(--terracotta-600)', color: '#fff' }
+          aria-label={slide === totalSlides - 1 ? 'Return to first view' : 'Next view'}
+        >
+          {slide === totalSlides - 1 ? (
+            <RotateCcw size={18} />
           ) : (
-            <>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={item.photos[slide - 1]}
-                alt={`${item.label} real work photo ${slide}`}
-                className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent" />
-              <div className="absolute right-3 top-3 rounded-full px-3 py-1.5 text-[11px] font-bold text-white" style={{ background: 'rgba(18,49,48,0.78)' }}>
-                Real work {slide}/{item.photos.length}
-              </div>
-            </>
+            <ChevronRight size={20} />
           )}
+        </button>
+      </div>
 
-          <div className="absolute bottom-3 right-3 flex h-10 w-10 items-center justify-center rounded-full shadow-lg" style={{ background: 'var(--terracotta-600)', color: '#fff' }}>
-            {slide === totalSlides - 1 ? <RotateCcw size={18} /> : <ChevronRight size={20} />}
+      <div className="p-4 sm:p-5">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <h3
+              className="font-display text-xl"
+              style={ color: 'var(--cream-50)' }
+            >
+              {item.label}
+            </h3>
+            <p
+              className="font-body mt-1 text-xs leading-5 sm:text-sm"
+              style={ color: 'var(--teal-100)' }
+            >
+              {item.description}
+            </p>
           </div>
+          <Camera
+            size={19}
+            color="var(--gold-400)"
+            className="mt-1 shrink-0"
+          />
         </div>
 
-        <div className="p-4 sm:p-5">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <h3 className="font-display text-xl" style={{ color: 'var(--cream-50)' }}>{item.label}</h3>
-              <p className="font-body mt-1 text-xs leading-5 sm:text-sm" style={{ color: 'var(--teal-100)' }}>{item.description}</p>
-            </div>
-            <Camera size={19} color="var(--gold-400)" className="mt-1 shrink-0" />
-          </div>
+        <div className="mt-4 flex items-center justify-between gap-3">
+          <span
+            className="font-body text-[11px] font-bold"
+            style={ color: 'var(--gold-400)' }
+          >
+            {currentMedia?.type === 'video' ? 'Use the controls to play' : 'Tap to continue'}
+          </span>
 
-          <div className="mt-4 flex items-center justify-between gap-3">
-            <span className="font-body text-[11px] font-bold" style={{ color: 'var(--gold-400)' }}>
-              {isScene ? 'Tap to view real work' : 'Tap for the next view'}
-            </span>
-            <div className="flex gap-1.5" aria-hidden="true">
-              {Array.from({ length: totalSlides }).map((_, index) => (
-                <span
-                  key={index}
-                  className="h-1.5 rounded-full transition-all"
-                  style={{
-                    width: index === slide ? 18 : 6,
-                    background: index === slide ? 'var(--gold-400)' : 'rgba(220,238,236,0.35)',
-                  }}
-                />
-              ))}
-            </div>
+          <div className="flex gap-1.5" aria-label={`View ${slide + 1} of ${totalSlides}`}>
+            {Array.from({ length: totalSlides }).map((_, index) => (
+              <button
+                type="button"
+                key={index}
+                onClick={() => setSlide(index)}
+                className="h-2 rounded-full transition-all"
+                style={
+                  width: index === slide ? 18 : 7,
+                  background:
+                    index === slide
+                      ? 'var(--gold-400)'
+                      : 'rgba(220,238,236,0.35)',
+                }
+                aria-label={`Show view ${index + 1}`}
+              />
+            ))}
           </div>
         </div>
-      </button>
+      </div>
     </article>
   );
 }
 
 export default function Gallery() {
   return (
-    <section id="gallery" className="relative overflow-hidden px-4 py-16 sm:px-5 md:py-20" style={{ background: 'var(--teal-900)' }}>
+    <section
+      id="gallery"
+      className="relative overflow-hidden px-4 py-16 sm:px-5 md:py-20"
+      style={ background: 'var(--teal-900)' }
+    >
       <div className="mx-auto max-w-6xl">
         <div className="mb-9 text-center md:mb-12">
-          <span className="font-label text-xs" style={{ color: 'var(--gold-400)' }}>ANIMATION MEETS REAL WORK</span>
-          <h2 className="font-display mt-3 text-3xl md:text-4xl" style={{ color: 'var(--cream-50)' }}>Watch Our Work</h2>
-          <p className="font-body mx-auto mt-3 max-w-xl text-sm leading-6 sm:text-base" style={{ color: 'var(--teal-100)' }}>
-            Tap any service to move from its animated preview through real Aqua Haul photos. After the final photo, the card loops back to the animation.
+          <span
+            className="font-label text-xs"
+            style={ color: 'var(--gold-400)' }
+          >
+            SEE THE DIFFERENCE
+          </span>
+          <h2
+            className="font-display mt-3 text-3xl md:text-4xl"
+            style={ color: 'var(--cream-50)' }
+          >
+            Watch Our Work
+          </h2>
+          <p
+            className="font-body mx-auto mt-3 max-w-xl text-sm leading-6 sm:text-base"
+            style={ color: 'var(--teal-100)' }
+          >
+            Explore each service and browse photos and videos from our work.
           </p>
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 md:gap-5">
-          {ITEMS.map((item) => <GalleryCard key={item.key} item={item} />)}
+          {GALLERY_SERVICES.map((item) => (
+            <GalleryCard key={item.key} item={item} />
+          ))}
         </div>
       </div>
 
@@ -317,6 +348,7 @@ export default function Gallery() {
           .gallery-card img { transition: none !important; }
         }
       `}</style>
+
 
       <WaveDivider color="var(--cream-100)" />
     </section>
