@@ -164,14 +164,14 @@ function GalleryCard({ item }) {
   return (
     <article
       className="gallery-card overflow-hidden rounded-3xl border-2"
-      style={
+      style={{
         borderColor: 'var(--teal-600)',
         background: 'var(--teal-700)',
-      }
+      }}
     >
       <div
         className="group relative aspect-[16/10] overflow-hidden"
-        style={ background: '#174544' }
+        style={{ background: '#174544' }}
       >
         {isScene ? (
           <button
@@ -215,7 +215,7 @@ function GalleryCard({ item }) {
           type="button"
           onClick={nextSlide}
           className="absolute bottom-3 right-3 z-10 flex h-10 w-10 items-center justify-center rounded-full shadow-lg"
-          style={ background: 'var(--terracotta-600)', color: '#fff' }
+          style={{ background: 'var(--terracotta-600)', color: '#fff' }}
           aria-label={slide === totalSlides - 1 ? 'Return to first view' : 'Next view'}
         >
           {slide === totalSlides - 1 ? (
@@ -231,13 +231,13 @@ function GalleryCard({ item }) {
           <div>
             <h3
               className="font-display text-xl"
-              style={ color: 'var(--cream-50)' }
+              style={{ color: 'var(--cream-50)' }}
             >
               {item.label}
             </h3>
             <p
               className="font-body mt-1 text-xs leading-5 sm:text-sm"
-              style={ color: 'var(--teal-100)' }
+              style={{ color: 'var(--teal-100)' }}
             >
               {item.description}
             </p>
@@ -252,7 +252,7 @@ function GalleryCard({ item }) {
         <div className="mt-4 flex items-center justify-between gap-3">
           <span
             className="font-body text-[11px] font-bold"
-            style={ color: 'var(--gold-400)' }
+            style={{ color: 'var(--gold-400)' }}
           >
             {currentMedia?.type === 'video' ? 'Use the controls to play' : 'Tap to continue'}
           </span>
@@ -264,13 +264,13 @@ function GalleryCard({ item }) {
                 key={index}
                 onClick={() => setSlide(index)}
                 className="h-2 rounded-full transition-all"
-                style={
+                style={{
                   width: index === slide ? 18 : 7,
                   background:
                     index === slide
                       ? 'var(--gold-400)'
                       : 'rgba(220,238,236,0.35)',
-                }
+                }}
                 aria-label={`Show view ${index + 1}`}
               />
             ))}
@@ -286,25 +286,25 @@ export default function Gallery() {
     <section
       id="gallery"
       className="relative overflow-hidden px-4 py-16 sm:px-5 md:py-20"
-      style={ background: 'var(--teal-900)' }
+      style={{ background: 'var(--teal-900)' }}
     >
       <div className="mx-auto max-w-6xl">
         <div className="mb-9 text-center md:mb-12">
           <span
             className="font-label text-xs"
-            style={ color: 'var(--gold-400)' }
+            style={{ color: 'var(--gold-400)' }}
           >
             SEE THE DIFFERENCE
           </span>
           <h2
             className="font-display mt-3 text-3xl md:text-4xl"
-            style={ color: 'var(--cream-50)' }
+            style={{ color: 'var(--cream-50)' }}
           >
             Watch Our Work
           </h2>
           <p
             className="font-body mx-auto mt-3 max-w-xl text-sm leading-6 sm:text-base"
-            style={ color: 'var(--teal-100)' }
+            style={{ color: 'var(--teal-100)' }}
           >
             Explore each service and browse photos and videos from our work.
           </p>
