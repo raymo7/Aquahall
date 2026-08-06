@@ -323,7 +323,15 @@ export default function BookingForm() {
       });
       const data = await readJson(response);
       if (!response.ok) throw new Error(data.message || data.error || 'Booking failed.');
+
       setBooking(data.booking);
+
+      // Preserve the successful booking screen as a fallback, then open
+      // WhatsApp automatically with the saved booking details.
+      const whatsappUrl = bookingWhatsApp(data.booking, false);
+      window.setTimeout(() => {
+        window.location.assign(whatsappUrl);
+      }, 350);
     } catch (requestError) {
       setError(requestError.message);
       if (/slot/i.test(requestError.message)) {
