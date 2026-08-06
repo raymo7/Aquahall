@@ -16,7 +16,7 @@ export default function SiteFooter() {
             <img src="/logo.jpg" className="h-12 w-12 rounded-full object-cover" alt="Aqua Haul" />
             <span className="font-display text-lg" style={{ color: 'var(--cream-50)' }}>Aqua Haul</span>
           </div>
-          <p className="font-body text-sm" style={{ color: 'var(--teal-100)' }}>Clean and go — mobile car wash across Kottayam district. We bring our own water and power.</p>
+          <p className="font-body text-sm" style={{ color: 'var(--teal-100)' }}>Clean and go — doorstep car care from Kuravilangadu and nearby areas. We bring our own water and power.</p>
         </div>
         <div>
           <p className="font-label mb-4 text-xs" style={{ color: 'var(--gold-400)' }}>CONTACT</p>
@@ -28,8 +28,8 @@ export default function SiteFooter() {
         <div>
           <p className="font-label mb-4 text-xs" style={{ color: 'var(--gold-400)' }}>HOURS &amp; AREA</p>
           <div className="font-body space-y-2 text-sm" style={{ color: 'var(--teal-100)' }}>
-            <p className="flex items-center gap-2"><Clock size={14} /> 9 AM – 9 PM, daily</p>
-            <p className="flex items-center gap-2"><MapPin size={14} /> Kottayam district, 20km radius</p>
+            <p className="flex items-center gap-2"><Clock size={14} /> 8 AM – 9 PM, daily</p>
+            <p className="flex items-center gap-2"><MapPin size={14} /> Based in Kuravilangadu · nearby locations within approximately 20 km</p>
           </div>
         </div>
         <div>
