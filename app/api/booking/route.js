@@ -7,29 +7,42 @@ import { BOOKING_SLOTS } from '../../../lib/scheduling';
 
 const MAX_LEN = 500;
 const PAYMENT_METHODS = ['onsite', 'advance'];
-const bad = (message, status = 400) => NextResponse.json({ error: message }, { status });
+const bad = (code, message, status = 400) => NextResponse.json({ code, message }, { status });
 
 export async function POST(request) {
   let body;
-  try { body = await request.json(); } catch { return bad('Invalid request body.'); }
+  try { body = await request.json(); } catch { return bad('INVALID_REQUEST', 'The booking request could not be read. Please try again.'); }
 
   const { name, phone, email, vehicleType, vehicleModel, alacarte, address, placeId,
     latitude, longitude, date, slotId, notes, paymentMethod } = body || {};
 
-  if (!name || name.trim().length < 2 || name.length > 120) return bad('Please enter a valid name.');
-  if (!/^\d{10}$/.test(String(phone || '').replace(/\D/g, ''))) return bad('Phone number must contain exactly 10 digits.');
-  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return bad('Please enter a valid email.');
-  if (!VEHICLE_TYPES.some((vehicle) => vehicle.value === vehicleType)) return bad('Please choose a valid vehicle type.');
-  if (!address || address.trim().length < 5 || address.length > MAX_LEN) return bad('Please select a valid service address.');
-  if (!placeId || !Number.isFinite(Number(latitude)) || !Number.isFinite(Number(longitude))) return bad('Please choose an address from the suggestions.');
-  if (!date || isNaN(Date.parse(date))) return bad('Please choose a valid date.');
-  if (!BOOKING_SLOTS.some((slot) => slot.id === slotId)) return bad('Please choose a valid time slot.');
-  if (!PAYMENT_METHODS.includes(paymentMethod)) return bad('Please choose a payment method.');
-  if (notes && notes.length > MAX_LEN) return bad('Notes are too long.');
+  if (!name || name.trim().length < 2 || name.length > 120) return bad('INVALID_NAME', 'Enter your full name.');
+  if (!/^\d{10}$/.test(String(phone || '').replace(/\D/g, ''))) return bad('INVALID_PHONE', 'Enter an exact 10-digit mobile number.');
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return bad('INVALID_EMAIL', 'Enter a valid email address or leave it blank.');
+  if (!VEHICLE_TYPES.some((vehicle) => vehicle.value === vehicleType)) return bad('INVALID_VEHICLE', 'Choose a valid vehicle type.');
+  if (!address || address.trim().length < 5 || address.length > MAX_LEN) return bad('INVALID_ADDRESS', 'Enter a valid service address.');
+  if (!placeId || !Number.isFinite(Number(latitude)) || !Number.isFinite(Number(longitude))) return bad('ADDRESS_NOT_SELECTED', 'Choose your address from the Google suggestions.');
+  if (!date || isNaN(Date.parse(date))) return bad('INVALID_DATE', 'Choose a valid service date.');
+  if (!BOOKING_SLOTS.some((slot) => slot.id === slotId)) return bad('INVALID_SLOT', 'Choose an available time slot.');
+  if (!PAYMENT_METHODS.includes(paymentMethod)) return bad('INVALID_PAYMENT', 'Choose Pay Onsite or Pay Advance.');
+  if (notes && notes.length > MAX_LEN) return bad('NOTES_TOO_LONG', 'Notes must be under 500 characters.');
 
   const availability = await evaluateAvailability({ date, latitude, longitude });
+  if (availability.outsideArea) {
+    return bad('OUTSIDE_SERVICE_AREA', 'This address is outside our normal online booking area. Check service availability on WhatsApp.', 409);
+  }
+
   const selected = availability.slots.find((slot) => slot.id === slotId);
-  if (!selected?.available) return bad(selected?.reason || 'This slot is no longer available.', 409);
+  if (!selected?.available) {
+    const messages = {
+      BOOKED: 'This slot is already booked. Choose another available slot.',
+      ADMIN_BLOCKED: selected?.reason || 'This slot has been blocked by Aqua Haul.',
+      ROUTE_CONFLICT: 'This slot cannot accommodate the travel time for your selected location.',
+      SLOT_STARTED: 'This slot has already started. Choose a later slot.',
+      LAST_MINUTE_WHATSAPP: 'This is a last-minute request. Check availability on WhatsApp.',
+    };
+    return bad(selected?.reasonCode || 'SLOT_UNAVAILABLE', messages[selected?.reasonCode] || selected?.reason || 'This slot is no longer available.', 409);
+  }
 
   const resolved = resolveBooking({ vehicleType, alacarte });
   try {
@@ -47,7 +60,9 @@ export async function POST(request) {
     return NextResponse.json({ booking }, { status: 201 });
   } catch (error) {
     console.error('booking insert failed:', error);
-    if (String(error.message).includes('bookings_active_slot_unique')) return bad('That slot was just taken. Please choose another one.', 409);
-    return bad('Could not save your booking right now. Please try again or contact us on WhatsApp.', 500);
+    if (String(error.message).includes('bookings_active_slot_unique')) {
+      return bad('SLOT_JUST_TAKEN', 'Another customer just booked this slot. Choose another available slot.', 409);
+    }
+    return bad('BOOKING_SAVE_FAILED', 'We could not save your booking. Please try again or contact Aqua Haul on WhatsApp.', 500);
   }
 }
