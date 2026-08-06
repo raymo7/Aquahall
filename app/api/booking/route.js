@@ -13,15 +13,17 @@ export async function POST(request) {
   let body;
   try { body = await request.json(); } catch { return bad('INVALID_REQUEST', 'The booking request could not be read. Please try again.'); }
 
-  const { name, phone, email, vehicleType, vehicleModel, alacarte, address, placeId,
+  const { name, phone, email, vehicleType, vehicleModel, alacarte, address, mapAddress, landmark, placeId,
     latitude, longitude, date, slotId, notes, paymentMethod } = body || {};
 
   if (!name || name.trim().length < 2 || name.length > 120) return bad('INVALID_NAME', 'Enter your full name.');
   if (!/^\d{10}$/.test(String(phone || '').replace(/\D/g, ''))) return bad('INVALID_PHONE', 'Enter an exact 10-digit mobile number.');
   if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return bad('INVALID_EMAIL', 'Enter a valid email address or leave it blank.');
   if (!VEHICLE_TYPES.some((vehicle) => vehicle.value === vehicleType)) return bad('INVALID_VEHICLE', 'Choose a valid vehicle type.');
-  if (!address || address.trim().length < 5 || address.length > MAX_LEN) return bad('INVALID_ADDRESS', 'Enter a valid service address.');
-  if (!placeId || !Number.isFinite(Number(latitude)) || !Number.isFinite(Number(longitude))) return bad('ADDRESS_NOT_SELECTED', 'Choose your address from the Google suggestions.');
+  if (!address || address.trim().length < 5 || address.length > MAX_LEN) return bad('INVALID_ADDRESS', 'Enter your house name or exact address.');
+  if (!mapAddress || mapAddress.trim().length < 3 || mapAddress.length > MAX_LEN) return bad('INVALID_MAP_LOCATION', 'Select a valid place or use your current location.');
+  if (landmark && landmark.length > MAX_LEN) return bad('LANDMARK_TOO_LONG', 'Landmark or directions must be under 500 characters.');
+  if (!Number.isFinite(Number(latitude)) || !Number.isFinite(Number(longitude))) return bad('ADDRESS_NOT_SELECTED', 'Select a place from Google suggestions or use your current location.');
   if (!date || isNaN(Date.parse(date))) return bad('INVALID_DATE', 'Choose a valid service date.');
   if (!BOOKING_SLOTS.some((slot) => slot.id === slotId)) return bad('INVALID_SLOT', 'Choose an available time slot.');
   if (!PAYMENT_METHODS.includes(paymentMethod)) return bad('INVALID_PAYMENT', 'Choose Pay Onsite or Pay Advance.');
@@ -50,7 +52,7 @@ export async function POST(request) {
       name: name.trim(), phone: String(phone).replace(/\D/g, ''), email: email?.trim() || null,
       vehicleType, vehicleModel: vehicleModel?.trim() || null, category: resolved.category,
       packageId: resolved.packageId, alacarte: resolved.alacarte, services: resolved.services,
-      address: address.trim(), placeId, latitude: Number(latitude), longitude: Number(longitude),
+      address: address.trim(), mapAddress: mapAddress.trim(), landmark: landmark?.trim() || null, placeId: placeId || null, latitude: Number(latitude), longitude: Number(longitude),
       date, time: selected.label, slotId, notes: notes?.trim() || null, amount: resolved.amount,
       paymentMethod, distanceFromBaseKm: selected.distanceFromBaseKm,
       travelMinutesFromPrevious: selected.travelMinutesFromPrevious,
