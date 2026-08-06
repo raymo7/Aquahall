@@ -8,6 +8,12 @@ export async function POST(request) {
     return NextResponse.json(result);
   } catch (error) {
     console.error('availability failed:', error);
-    return NextResponse.json({ error: error.message || 'Could not check availability.' }, { status: 500 });
+    return NextResponse.json(
+      {
+        code: error.code || 'AVAILABILITY_FAILED',
+        message: error.message || 'Could not check slot availability. Please try again.',
+      },
+      { status: 500 },
+    );
   }
 }
