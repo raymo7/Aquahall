@@ -68,3 +68,10 @@ create index if not exists enquiries_created_at_idx on enquiries (created_at des
 create unique index if not exists bookings_active_slot_unique
   on bookings (booking_date, slot_id)
   where slot_id is not null and coalesce(booking_status, 'received') <> 'cancelled';
+
+-- Separate customer-entered house details from the navigable map point.
+alter table bookings add column if not exists map_address text;
+alter table bookings add column if not exists landmark text;
+
+-- Preserve old bookings and make map_address required only at application level.
+update bookings set map_address = address where map_address is null and address is not null;
