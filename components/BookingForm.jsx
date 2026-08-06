@@ -9,6 +9,7 @@ import {
   CheckCircle2,
   Crown,
   Loader2,
+  LocateFixed,
   MessageCircle,
   Truck,
   Users,
@@ -55,6 +56,11 @@ function bookingRef(id) {
   return `AQ${String(id || '').replace(/[^a-z0-9]/gi, '').slice(-6).toUpperCase()}`;
 }
 
+function mapsLink(latitude, longitude) {
+  if (!Number.isFinite(Number(latitude)) || !Number.isFinite(Number(longitude))) return '';
+  return `https://www.google.com/maps/search/?api=1&query=${Number(latitude)},${Number(longitude)}`;
+}
+
 async function readJson(response) {
   const contentType = response.headers.get('content-type') || '';
   if (!contentType.includes('application/json')) {
@@ -77,7 +83,10 @@ function bookingWhatsApp(booking, paid = false) {
     `Add-ons: ${(booking.alacarte || []).length ? booking.alacarte.map(serviceName).join(', ') : 'None'}`,
     `Date: ${formatDate(booking.booking_date)}`,
     `Time: ${booking.booking_time}`,
-    `Address: ${booking.address}`,
+    `House address: ${booking.address}`,
+    booking.map_address ? `Place: ${booking.map_address}` : null,
+    mapsLink(booking.latitude, booking.longitude) ? `Google Maps: ${mapsLink(booking.latitude, booking.longitude)}` : null,
+    booking.landmark ? `Landmark: ${booking.landmark}` : null,
     `Amount: ₹${booking.amount}`,
     `Payment: ${booking.payment_method === 'advance' ? (paid ? 'Advance payment completed' : 'Pay Advance') : 'Pay Onsite'}`,
     booking.notes ? `Notes: ${booking.notes}` : null,
@@ -102,7 +111,10 @@ function enquiryWhatsApp({ form, resolved, distance, requestedSlot }) {
     `Add-ons: ${form.alacarte.length ? form.alacarte.map(serviceName).join(', ') : 'None'}`,
     form.date ? `Preferred date: ${formatDate(form.date)}` : null,
     requestedSlot ? `Preferred slot: ${requestedSlot.label}` : null,
-    form.address ? `Address: ${form.address}` : null,
+    form.address ? `House address: ${form.address}` : null,
+    form.mapAddress ? `Place: ${form.mapAddress}` : null,
+    mapsLink(form.latitude, form.longitude) ? `Google Maps: ${mapsLink(form.latitude, form.longitude)}` : null,
+    form.landmark ? `Landmark: ${form.landmark}` : null,
     distance != null ? `Approximate distance from Kuravilangadu: ${distance} km` : null,
     `Estimated amount: ₹${resolved.amount}`,
     form.notes ? `Notes: ${form.notes}` : null,
@@ -138,6 +150,8 @@ export default function BookingForm() {
     phone: '',
     email: '',
     address: '',
+    mapAddress: '',
+    landmark: '',
     placeId: '',
     latitude: null,
     longitude: null,
@@ -163,7 +177,7 @@ export default function BookingForm() {
   }, [step]);
 
   useEffect(() => {
-    if (!form.address || form.address.length < 3 || form.placeId) {
+    if (!form.mapAddress || form.mapAddress.length < 3 || form.placeId) {
       setSuggestions([]);
       return;
     }
@@ -174,7 +188,7 @@ export default function BookingForm() {
         const response = await fetch('/api/places/autocomplete', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ input: form.address, sessionToken: sessionToken.current }),
+          body: JSON.stringify({ input: form.mapAddress, sessionToken: sessionToken.current }),
         });
         const data = await readJson(response);
         if (!response.ok) throw new Error(data.message || data.error || 'Could not search addresses.');
@@ -188,7 +202,7 @@ export default function BookingForm() {
     }, 350);
 
     return () => clearTimeout(timer);
-  }, [form.address, form.placeId]);
+  }, [form.mapAddress, form.placeId]);
 
   useEffect(() => {
     if (!form.date || !Number.isFinite(Number(form.latitude)) || !Number.isFinite(Number(form.longitude))) {
@@ -266,13 +280,13 @@ export default function BookingForm() {
       const place = data.place;
       setForm((current) => ({
         ...current,
-        address: place.formattedAddress || item.text,
+        mapAddress: place.formattedAddress || item.text,
         placeId: place.id,
         latitude: place.location?.latitude,
         longitude: place.location?.longitude,
         slotId: '',
       }));
-      setFieldErrors((current) => ({ ...current, address: '' }));
+      setFieldErrors((current) => ({ ...current, mapAddress: '' }));
       setSuggestions([]);
     } catch (requestError) {
       setError(requestError.message);
@@ -281,12 +295,49 @@ export default function BookingForm() {
     }
   }
 
+  function useCurrentLocation() {
+    setError('');
+    setFieldErrors((current) => ({ ...current, mapAddress: '' }));
+
+    if (!navigator.geolocation) {
+      setFieldErrors((current) => ({ ...current, mapAddress: 'Current location is not supported on this device.' }));
+      return;
+    }
+
+    setAddressBusy(true);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const latitude = Number(position.coords.latitude.toFixed(7));
+        const longitude = Number(position.coords.longitude.toFixed(7));
+        setForm((current) => ({
+          ...current,
+          mapAddress: `Current location (${latitude}, ${longitude})`,
+          placeId: 'current-location',
+          latitude,
+          longitude,
+          slotId: '',
+        }));
+        setSuggestions([]);
+        setAddressBusy(false);
+      },
+      (locationError) => {
+        const message = locationError.code === 1
+          ? 'Location permission was denied. Search for a nearby place instead.'
+          : 'We could not get your current location. Search for a nearby place instead.';
+        setFieldErrors((current) => ({ ...current, mapAddress: message }));
+        setAddressBusy(false);
+      },
+      { enableHighAccuracy: true, timeout: 12000, maximumAge: 60000 },
+    );
+  }
+
   function validateDetails() {
     const nextErrors = {};
     if (form.name.trim().length < 2) nextErrors.name = 'Enter your full name.';
     if (!/^\d{10}$/.test(form.phone)) nextErrors.phone = `Enter exactly 10 digits (${form.phone.length}/10 entered).`;
     if (form.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) nextErrors.email = 'Enter a valid email address or leave it blank.';
-    if (!form.placeId) nextErrors.address = 'Choose your address from the Google suggestions.';
+    if (form.address.trim().length < 5) nextErrors.address = 'Enter your house name or exact address.';
+    if (!Number.isFinite(Number(form.latitude)) || !Number.isFinite(Number(form.longitude))) nextErrors.mapAddress = 'Select a place from Google suggestions or use your current location.';
     if (!form.date) nextErrors.date = 'Choose a service date.';
     if (!outsideArea && !availabilityBusy && !form.slotId) {
       nextErrors.slotId = slots.some((slot) => slot.available)
@@ -461,24 +512,36 @@ export default function BookingForm() {
                     </Field>
                   </div>
 
-                  <div className="relative mt-5">
-                    <Field label="Service address" error={fieldErrors.address}>
-                      <input
+                  <div className="mt-5">
+                    <Field label="House address" error={fieldErrors.address}>
+                      <textarea
                         className="field"
+                        rows={2}
                         value={form.address}
+                        onChange={(event) => update('address', event.target.value)}
+                        placeholder="House name, building, road and locality"
+                      />
+                    </Field>
+                  </div>
+
+                  <div className="relative mt-5">
+                    <Field label="Place / map location" error={fieldErrors.mapAddress}>
+                      <input
+                        className="field pr-12"
+                        value={form.mapAddress}
                         onChange={(event) => {
-                          setFieldErrors((current) => ({ ...current, address: '' }));
+                          setFieldErrors((current) => ({ ...current, mapAddress: '' }));
                           setError('');
                           setForm((current) => ({
                             ...current,
-                            address: event.target.value,
+                            mapAddress: event.target.value,
                             placeId: '',
                             latitude: null,
                             longitude: null,
                             slotId: '',
                           }));
                         }}
-                        placeholder="Search and select your address"
+                        placeholder="Search a road, junction, church, shop or nearby place"
                       />
                     </Field>
                     {addressBusy && <Loader2 className="absolute right-4 top-10 animate-spin" size={18} />}
@@ -492,14 +555,43 @@ export default function BookingForm() {
                         ))}
                       </div>
                     )}
+                    <button
+                      type="button"
+                      onClick={useCurrentLocation}
+                      disabled={addressBusy}
+                      className="btn-ghost-teal mt-3 inline-flex items-center gap-2 text-sm disabled:opacity-60"
+                    >
+                      <LocateFixed size={16} /> Use my current location
+                    </button>
+                    {Number.isFinite(Number(form.latitude)) && Number.isFinite(Number(form.longitude)) && (
+                      <a
+                        href={mapsLink(form.latitude, form.longitude)}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="font-body ml-3 inline-block text-xs font-bold text-[var(--teal-700)] underline"
+                      >
+                        Preview on Google Maps
+                      </a>
+                    )}
+                  </div>
+
+                  <div className="mt-5">
+                    <Field label="Landmark / directions (optional)">
+                      <input
+                        className="field"
+                        value={form.landmark}
+                        onChange={(event) => update('landmark', event.target.value)}
+                        placeholder="Near a church, junction, shop, gate or other clear landmark"
+                      />
+                    </Field>
                   </div>
 
                   <div className="mt-5 grid gap-5 sm:grid-cols-2">
                     <Field label="Date" error={fieldErrors.date}>
                       <input className="field" type="date" min={new Date().toISOString().slice(0, 10)} value={form.date} onChange={(event) => update('date', event.target.value)} />
                     </Field>
-                    <Field label="Notes (optional)">
-                      <input className="field" value={form.notes} onChange={(event) => update('notes', event.target.value)} />
+                    <Field label="Service notes (optional)">
+                      <input className="field" placeholder="Vehicle condition, gate instructions or service requests" value={form.notes} onChange={(event) => update('notes', event.target.value)} />
                     </Field>
                   </div>
 
@@ -659,7 +751,12 @@ function Success({ booking, paid, onPaid, onReset }) {
               <p>{booking.vehicle_type}</p>
               <p>{(booking.services || []).map(serviceName).join(', ')}</p>
               <p>{formatDate(booking.booking_date)} · {booking.booking_time}</p>
-              <p>{booking.address}</p>
+              <p><strong>House:</strong> {booking.address}</p>
+              {booking.map_address && <p><strong>Place:</strong> {booking.map_address}</p>}
+              {booking.landmark && <p><strong>Landmark:</strong> {booking.landmark}</p>}
+              {mapsLink(booking.latitude, booking.longitude) && (
+                <a href={mapsLink(booking.latitude, booking.longitude)} target="_blank" rel="noreferrer" className="font-body text-sm font-bold text-[var(--teal-700)] underline">Open in Google Maps</a>
+              )}
               <p className="font-display text-3xl text-[var(--terracotta-600)]">₹{booking.amount}</p>
             </div>
           </div>
