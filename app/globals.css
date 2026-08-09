@@ -659,3 +659,113 @@ footer {
 
 @media (max-width:640px){ .vehicle-row{grid-template-columns:1fr}.addon-service-card{align-items:flex-start}.addon-price{font-size:14px}.wash-motion{height:98px}.wash-motion p{font-size:8px}.primary-service-card,.vehicle-care-card{padding:24px} }
 @media (prefers-reduced-motion:reduce){ .addon-service-card *,.wash-motion *,.wash-motion:before{animation:none!important} }
+
+/* 2026-08-09 animated primary service scenes */
+.primary-service-card-with-scene {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 24px;
+}
+.primary-service-content { position: relative; z-index: 2; }
+.primary-service-animation {
+  position: relative;
+  min-height: 214px;
+  overflow: hidden;
+  border-radius: 24px;
+  border: 1px solid rgba(42,104,102,.14);
+  background: linear-gradient(180deg,#eef9fb 0%,#fdf9ee 64%,#e8dfc7 100%);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.78);
+  isolation: isolate;
+}
+.primary-service-animation.care-scene {
+  border-color: rgba(232,184,78,.2);
+  background: linear-gradient(180deg,#174846 0%,#123130 70%,#0d2827 100%);
+}
+.service-scene-sky { position:absolute; inset:0 0 auto; height:72%; overflow:hidden; }
+.scene-sun {
+  position:absolute; width:46px; height:46px; right:26px; top:20px; border-radius:50%;
+  background:rgba(232,184,78,.62); box-shadow:0 0 0 12px rgba(232,184,78,.08);
+  animation:sceneSunPulse 5.5s ease-in-out infinite;
+}
+.care-scene .scene-sun { opacity:.38; }
+.scene-cloud { position:absolute; width:58px; height:16px; border-radius:999px; background:rgba(255,255,255,.7); filter:blur(.2px); }
+.scene-cloud:before,.scene-cloud:after { content:''; position:absolute; border-radius:50%; background:inherit; }
+.scene-cloud:before { width:25px;height:25px;left:10px;bottom:2px; }
+.scene-cloud:after { width:32px;height:32px;right:8px;bottom:0; }
+.cloud-one { top:31px; left:-72px; animation:sceneCloud 15s linear infinite; }
+.cloud-two { top:65px; left:-120px; transform:scale(.72); opacity:.6; animation:sceneCloud 20s linear 4s infinite; }
+.service-scene-art { position:absolute; inset:auto 0 17px; width:100%; height:auto; overflow:visible; }
+.scene-roof { fill:#d05f32; }
+.scene-house { fill:#f7ead1; stroke:#2a6866; stroke-width:3; }
+.scene-door { fill:#2a6866; }
+.scene-window { fill:#a7d8df; stroke:#2a6866; stroke-width:3; }
+.care-scene .scene-roof { fill:#dcae4c; }
+.care-scene .scene-house { fill:#194d4b; stroke:#79a6a2; }
+.care-scene .scene-door { fill:#dcae4c; }
+.care-scene .scene-window { fill:#7eb9c3; stroke:#79a6a2; }
+.customer-car-body { fill:#e9f1ef; stroke:#123130; stroke-width:4; }
+.customer-car-glass { fill:#a8d4dc; stroke:#123130; stroke-width:4; }
+.scene-wheel { fill:#241f1a; }
+.scene-hub { fill:#f8eed2; }
+.scene-headlight { stroke:#e8b84e; stroke-width:7; stroke-linecap:round; }
+.truck-box { fill:#f7f7f2; stroke:#123130; stroke-width:4; }
+.truck-cab { fill:#f7f7f2; stroke:#123130; stroke-width:4; }
+.truck-window { fill:#9dc8d1; stroke:#123130; stroke-width:3; }
+.truck-brand-panel { fill:#123130; }
+.truck-brand { fill:#f8eed2; font:700 12px 'Manrope',sans-serif; letter-spacing:.08em; }
+.truck-brand-small { fill:#e8b84e; font:800 10px 'Manrope',sans-serif; letter-spacing:.16em; }
+.scene-service-truck { transform-box:fill-box; transform-origin:center; animation:serviceTruckArrival 7s cubic-bezier(.45,.05,.2,1) infinite; }
+.scene-customer-car { transform-box:fill-box; transform-origin:center; }
+.wash-hose { fill:none; stroke:#2a6866; stroke-width:7; stroke-linecap:round; }
+.wash-spray { fill:none; stroke:#54a7cc; stroke-width:6; stroke-dasharray:9 10; stroke-linecap:round; animation:washSpray 1.1s linear infinite; }
+.foam-bubble { fill:#fff; stroke:#9cd2df; stroke-width:2; animation:foamFloat 2.4s ease-in-out infinite; }
+.bubble-b{animation-delay:.3s}.bubble-c{animation-delay:.7s}.bubble-d{animation-delay:1s}
+.wash-brush-line { fill:none; stroke:#d25e2f; stroke-width:12; stroke-linecap:round; stroke-dasharray:18 11; animation:brushLine 1.6s ease-in-out infinite alternate; }
+.care-status-ring { fill:rgba(232,184,78,.1); stroke:#e8b84e; stroke-width:5; stroke-dasharray:12 8; animation:careRing 5s linear infinite; }
+.care-check { fill:none; stroke:#e8b84e; stroke-width:7; stroke-linecap:round; stroke-linejoin:round; animation:careCheck 3s ease-in-out infinite; }
+.care-route { fill:none; stroke:#7cc0ce; stroke-width:5; stroke-dasharray:8 9; animation:routeDash 1.1s linear infinite; }
+.care-route-tip { fill:none; stroke:#7cc0ce; stroke-width:5; stroke-linecap:round; stroke-linejoin:round; }
+.care-phone { fill:#f8eed2; stroke:#e8b84e; stroke-width:3; animation:phoneFloat 3s ease-in-out infinite; }
+.care-camera-dot { fill:#2a6866; animation:cameraPulse 1.8s ease-in-out infinite; }
+.care-scene .customer-car-body { fill:#dcefed; }
+.care-scene .truck-box,.care-scene .truck-cab { fill:#f6f1e8; }
+.scene-road { stroke:rgba(36,31,26,.3); stroke-width:4; stroke-linecap:round; }
+.care-scene .scene-road { stroke:rgba(248,238,210,.18); }
+.scene-bubbles { position:absolute; inset:0; pointer-events:none; }
+.scene-bubbles i { position:absolute; width:12px; height:12px; border:2px solid rgba(76,166,205,.48); border-radius:50%; bottom:23px; opacity:0; animation:sceneBubbleRise 4.6s ease-in infinite; }
+.scene-bubbles i:nth-child(1){left:54%;animation-delay:.3s}.scene-bubbles i:nth-child(2){left:63%;width:8px;height:8px;animation-delay:1.1s}.scene-bubbles i:nth-child(3){left:72%;width:15px;height:15px;animation-delay:1.9s}.scene-bubbles i:nth-child(4){left:82%;width:9px;height:9px;animation-delay:2.7s}.scene-bubbles i:nth-child(5){left:89%;width:6px;height:6px;animation-delay:3.4s}
+.care-scene .scene-bubbles i { border-color:rgba(232,184,78,.32); }
+.scene-caption { position:absolute; left:14px; right:14px; bottom:10px; z-index:4; display:flex; align-items:center; gap:7px; color:rgba(18,49,48,.68); font:800 9px 'Manrope',sans-serif; letter-spacing:.025em; }
+.care-scene .scene-caption { color:rgba(248,238,210,.72); }
+.scene-caption-dot { width:7px;height:7px;border-radius:50%;background:#d25e2f; box-shadow:0 0 0 5px rgba(210,94,47,.1); }
+.care-scene .scene-caption-dot { background:#e8b84e; box-shadow:0 0 0 5px rgba(232,184,78,.1); }
+@keyframes serviceTruckArrival { 0%,8%{transform:translateX(-220px)} 24%,76%{transform:translateX(0)} 92%,100%{transform:translateX(240px)} }
+@keyframes washSpray { to{stroke-dashoffset:-38} }
+@keyframes foamFloat { 0%,100%{transform:translateY(3px);opacity:.35} 50%{transform:translateY(-8px);opacity:1} }
+@keyframes brushLine { from{stroke-dashoffset:0} to{stroke-dashoffset:44} }
+@keyframes sceneBubbleRise { 0%{transform:translateY(0) scale(.6);opacity:0} 18%{opacity:.7} 80%{opacity:.3} 100%{transform:translateY(-120px) translateX(18px) scale(1.35);opacity:0} }
+@keyframes sceneSunPulse { 50%{transform:scale(1.08);box-shadow:0 0 0 20px rgba(232,184,78,.05)} }
+@keyframes sceneCloud { from{transform:translateX(0)} to{transform:translateX(720px)} }
+@keyframes careRing { to{stroke-dashoffset:-80} }
+@keyframes careCheck { 0%,32%{opacity:.25;transform:scale(.86)} 45%,82%{opacity:1;transform:scale(1)} 100%{opacity:.25} }
+@keyframes routeDash { to{stroke-dashoffset:-34} }
+@keyframes phoneFloat { 50%{transform:translateY(-6px)} }
+@keyframes cameraPulse { 50%{r:8;opacity:.6} }
+
+@media (min-width: 1180px) {
+  .primary-service-card-with-scene { grid-template-columns:minmax(0,1.05fr) minmax(240px,.95fr); align-items:center; }
+  .primary-service-animation { min-height:270px; }
+}
+@media (max-width: 1179px) and (min-width: 641px) {
+  .primary-service-animation { min-height:230px; }
+}
+@media (max-width:640px) {
+  .primary-service-card-with-scene { gap:18px; }
+  .primary-service-animation { min-height:178px; border-radius:20px; }
+  .service-scene-art { bottom:12px; }
+  .scene-caption { font-size:8px; }
+}
+@media (prefers-reduced-motion:reduce) {
+  .primary-service-animation * { animation:none!important; }
+  .scene-service-truck { transform:translateX(0); }
+}
