@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { ArrowRight, BadgePercent, CalendarCheck, Camera, Check, Clock3, Droplets, HeartHandshake, Images, KeyRound, MapPin, MessageCircle, ShieldCheck, Sparkles, Truck, Video, Zap } from 'lucide-react';
 import FeaturedCarousel from './FeaturedCarousel';
 import WashMotionDivider from './WashMotionDivider';
+import PrimaryServiceAnimation from './PrimaryServiceAnimation';
 import { HEAVY_VEHICLE_PRICE, VEHICLE_CARE_PRICE, priceForPackage } from '../lib/pricing';
 
 export default function HomeSections() {
@@ -15,8 +16,14 @@ export default function HomeSections() {
 
     <section className="home-section bg-[var(--cream-100)] px-4 py-16 sm:px-6 md:py-24"><div className="mx-auto max-w-6xl"><div className="mx-auto max-w-2xl text-center"><span className="font-label text-xs text-[var(--terracotta-600)]">TWO WAYS WE CARE</span><h2 className="font-display mt-3 text-3xl text-[var(--teal-900)] md:text-5xl">More than a wash. Care that follows your life.</h2><p className="font-body mt-3 text-[var(--ink-muted)]">Choose a fresh doorstep clean, or let us look after a vehicle that has been sitting unused while you are away.</p></div>
       <div className="mt-10 grid gap-5 lg:grid-cols-2">
-        <div className="primary-service-card"><div className="primary-service-icon"><Droplets size={26}/></div><span className="font-label text-[10px] text-[var(--terracotta-600)]">COMPLETE CARE WASH</span><h3 className="font-display mt-2 text-3xl text-[var(--teal-900)]">A full refresh, right where you park.</h3><p>Foam Wash and Interior Detailing brought to your doorstep with our own water, power and equipment.</p><div className="service-price-row"><span>5-Seater <b>₹{priceForPackage('5-Seater')}</b></span><span>7-Seater <b>₹{priceForPackage('7-Seater')}</b></span></div><Link href="/book?service=complete" className="btn-primary mt-6 inline-flex items-center gap-2">Book a wash <ArrowRight size={17}/></Link></div>
-        <div className="primary-service-card care"><div className="primary-service-icon"><KeyRound size={26}/></div><span className="font-label text-[10px] text-[var(--gold-400)]">VEHICLE CARE VISIT</span><h3 className="font-display mt-2 text-3xl">Away from home? We’ll check in on your car.</h3><p>Ideal for vehicles left unused for weeks or months. We visually check it, start it, take it for a short run/drive up to 5 km where safe and permitted, complete the wash, then send you a photo/video update.</p><strong className="font-display mt-5 block text-4xl">₹{VEHICLE_CARE_PRICE}</strong><Link href="/book?service=vehicle-care" className="btn-primary mt-6 inline-flex items-center gap-2">Book vehicle care <ArrowRight size={17}/></Link></div>
+        <div className="primary-service-card primary-service-card-with-scene">
+          <div className="primary-service-content"><div className="primary-service-icon"><Droplets size={26}/></div><span className="font-label text-[10px] text-[var(--terracotta-600)]">COMPLETE CARE WASH</span><h3 className="font-display mt-2 text-3xl text-[var(--teal-900)]">A full refresh, right where you park.</h3><p>Foam Wash and Interior Detailing brought to your doorstep with our own water, power and equipment.</p><div className="service-price-row"><span>5-Seater <b>₹{priceForPackage('5-Seater')}</b></span><span>7-Seater <b>₹{priceForPackage('7-Seater')}</b></span></div><Link href="/book?service=complete" className="btn-primary mt-6 inline-flex items-center gap-2">Book a wash <ArrowRight size={17}/></Link></div>
+          <PrimaryServiceAnimation variant="wash" />
+        </div>
+        <div className="primary-service-card care primary-service-card-with-scene">
+          <div className="primary-service-content"><div className="primary-service-icon"><KeyRound size={26}/></div><span className="font-label text-[10px] text-[var(--gold-400)]">VEHICLE CARE VISIT</span><h3 className="font-display mt-2 text-3xl">Away from home? We’ll check in on your car.</h3><p>Ideal for vehicles left unused for weeks or months. We visually check it, start it, take it for a short run/drive up to 5 km where safe and permitted, complete the wash, then send you a photo/video update.</p><strong className="font-display mt-5 block text-4xl">₹{VEHICLE_CARE_PRICE}</strong><Link href="/book?service=vehicle-care" className="btn-primary mt-6 inline-flex items-center gap-2">Book vehicle care <ArrowRight size={17}/></Link></div>
+          <PrimaryServiceAnimation variant="care" />
+        </div>
       </div>
       <div className="mt-5 rounded-3xl border border-[var(--teal-100)] bg-white p-5 text-sm text-[var(--ink-muted)]"><strong className="text-[var(--teal-900)]">Vehicle Care Visit:</strong> the short drive is only carried out with owner permission and when the vehicle appears safe and legally permitted to be driven. We’ll contact you first if anything needs attention.</div>
     </div></section>
