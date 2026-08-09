@@ -4,7 +4,7 @@ import { CORE_SERVICES, HEAVY_VEHICLE_PRICE, priceForPackage, addOnPrice } from 
 import WaveDivider from './WaveDivider';
 
 export default function PricingSection() {
-  const book = () => document.getElementById('booking')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  const book = () => { window.location.href = '/book'; };
   return (
     <section id="pricing" className="relative bg-[var(--cream-100)] px-4 py-16 sm:px-6 md:py-24">
       <div className="mx-auto max-w-6xl">
