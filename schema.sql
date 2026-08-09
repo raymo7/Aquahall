@@ -75,3 +75,12 @@ alter table bookings add column if not exists landmark text;
 
 -- Preserve old bookings and make map_address required only at application level.
 update bookings set map_address = address where map_address is null and address is not null;
+
+
+-- Multi-vehicle, group offer and Vehicle Care Visit metadata.
+alter table bookings add column if not exists vehicle_count integer not null default 1;
+alter table bookings add column if not exists vehicles jsonb not null default '[]'::jsonb;
+alter table bookings add column if not exists service_type text not null default 'complete';
+alter table bookings add column if not exists group_offer boolean not null default false;
+alter table bookings add column if not exists group_location_mode text;
+alter table bookings add column if not exists care_details jsonb;
