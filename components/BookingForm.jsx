@@ -148,6 +148,7 @@ export default function BookingForm() {
   const [slots, setSlots] = useState([]);
   const [distance, setDistance] = useState(null);
   const [outsideArea, setOutsideArea] = useState(false);
+  const [lockedService, setLockedService] = useState(null);
 
   const [form, setForm] = useState({
     vehicleCount: 1,
@@ -188,11 +189,26 @@ export default function BookingForm() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const requested = Math.max(1, Math.min(4, Number(params.get('vehicles')) || 1));
-    const service = params.get('service') === 'vehicle-care' ? 'vehicle-care' : 'complete';
+    const requestedService = params.get('service');
+    const service = requestedService === 'vehicle-care' ? 'vehicle-care' : 'complete';
+    const hasPreselectedService = requestedService === 'vehicle-care' || requestedService === 'complete';
     const group = params.get('offer') === 'group' || requested >= 3;
+
+    setLockedService(hasPreselectedService ? service : null);
     setForm((current) => {
-      const vehicles = Array.from({ length: requested }, (_, index) => current.vehicles[index] || { type: '5-Seater', model: '' });
-      return { ...current, vehicleCount: requested, vehicles, vehicleType: vehicles[0].type, vehicleModel: vehicles[0].model || '', serviceType: service, groupOffer: group };
+      const vehicles = Array.from(
+        { length: requested },
+        (_, index) => current.vehicles[index] || { type: '5-Seater', model: '' },
+      );
+      return {
+        ...current,
+        vehicleCount: requested,
+        vehicles,
+        vehicleType: vehicles[0].type,
+        vehicleModel: vehicles[0].model || '',
+        serviceType: service,
+        groupOffer: group,
+      };
     });
   }, []);
 
@@ -490,12 +506,63 @@ export default function BookingForm() {
 
               {step === 1 && (
                 <div>
-                  <span className="font-label text-[10px] text-[var(--terracotta-600)]">CHOOSE YOUR CARE</span>
-                  <h3 className="font-display mt-2 text-2xl text-[var(--teal-900)]">What would you like us to do?</h3>
-                  {category === 'heavy' ? <div className="mt-5 rounded-3xl bg-[var(--teal-900)] p-6 text-white"><h4 className="font-display text-3xl">Heavy Vehicle Wash</h4><p className="font-body mt-2 text-sm text-[var(--teal-100)]">Dedicated cleaning for trucks, buses and machinery at your location.</p></div> : <div className="mt-5 grid gap-4 md:grid-cols-2">
-                    <button type="button" onClick={()=>update('serviceType','complete')} className={`service-choice ${form.serviceType==='complete'?'active':''}`}><span className="service-choice-icon"><Car size={24}/></span><span className="font-label text-[9px]">COMPLETE CARE WASH</span><strong>A fresh start, inside and out.</strong><small>Foam Wash + Interior Detailing at your doorstep.</small><b>From ₹{priceForPackage(form.vehicles[0]?.type || '5-Seater')}</b></button>
-                    <button type="button" onClick={()=>update('serviceType','vehicle-care')} className={`service-choice care ${form.serviceType==='vehicle-care'?'active':''}`}><span className="service-choice-icon"><KeyRound size={24}/></span><span className="font-label text-[9px]">VEHICLE CARE VISIT</span><strong>Away from home? We’ll check in on your car.</strong><small>Visual check, start-up, short run/drive up to 5 km where safe, wash + photo/video update.</small><b>₹1000 per vehicle</b></button>
-                  </div>}
+                  <span className="font-label text-[10px] text-[var(--terracotta-600)]">
+                    {lockedService ? 'YOUR SELECTED SERVICE' : 'CHOOSE YOUR CARE'}
+                  </span>
+                  <h3 className="font-display mt-2 text-2xl text-[var(--teal-900)]">
+                    {lockedService ? 'We kept the service you selected.' : 'What would you like us to do?'}
+                  </h3>
+
+                  {category === 'heavy' ? (
+                    <div className="mt-5 rounded-3xl bg-[var(--teal-900)] p-6 text-white">
+                      <h4 className="font-display text-3xl">Heavy Vehicle Wash</h4>
+                      <p className="font-body mt-2 text-sm text-[var(--teal-100)]">
+                        Dedicated cleaning for trucks, buses and machinery at your location.
+                      </p>
+                    </div>
+                  ) : lockedService ? (
+                    <div className={`service-choice selected-service-summary mt-5 ${form.serviceType === 'vehicle-care' ? 'care active' : 'active'}`}>
+                      <span className="service-choice-icon">
+                        {form.serviceType === 'vehicle-care' ? <KeyRound size={24}/> : <Car size={24}/>}
+                      </span>
+                      <span className="font-label text-[9px]">
+                        {form.serviceType === 'vehicle-care' ? 'VEHICLE CARE VISIT' : 'COMPLETE CARE WASH'}
+                      </span>
+                      <strong>
+                        {form.serviceType === 'vehicle-care'
+                          ? 'Away from home? We’ll check in on your car.'
+                          : 'A fresh start, inside and out.'}
+                      </strong>
+                      <small>
+                        {form.serviceType === 'vehicle-care'
+                          ? 'Visual check, start-up, short run/drive up to 5 km where safe, wash + photo/video update.'
+                          : 'Foam Wash + Interior Detailing at your doorstep.'}
+                      </small>
+                      <b>
+                        {form.serviceType === 'vehicle-care'
+                          ? '₹1000 per vehicle'
+                          : `From ₹${priceForPackage(form.vehicles[0]?.type || '5-Seater')}`}
+                      </b>
+                      <span className="selected-service-note">Selected from the previous page</span>
+                    </div>
+                  ) : (
+                    <div className="mt-5 grid gap-4 md:grid-cols-2">
+                      <button type="button" onClick={()=>update('serviceType','complete')} className={`service-choice ${form.serviceType==='complete'?'active':''}`}>
+                        <span className="service-choice-icon"><Car size={24}/></span>
+                        <span className="font-label text-[9px]">COMPLETE CARE WASH</span>
+                        <strong>A fresh start, inside and out.</strong>
+                        <small>Foam Wash + Interior Detailing at your doorstep.</small>
+                        <b>From ₹{priceForPackage(form.vehicles[0]?.type || '5-Seater')}</b>
+                      </button>
+                      <button type="button" onClick={()=>update('serviceType','vehicle-care')} className={`service-choice care ${form.serviceType==='vehicle-care'?'active':''}`}>
+                        <span className="service-choice-icon"><KeyRound size={24}/></span>
+                        <span className="font-label text-[9px]">VEHICLE CARE VISIT</span>
+                        <strong>Away from home? We’ll check in on your car.</strong>
+                        <small>Visual check, start-up, short run/drive up to 5 km where safe, wash + photo/video update.</small>
+                        <b>₹1000 per vehicle</b>
+                      </button>
+                    </div>
+                  )}
 
                   {form.serviceType === 'vehicle-care' && category !== 'heavy' && <div className="care-questions mt-6"><h4 className="font-display text-xl text-[var(--teal-900)]">A few details before we visit</h4><div className="mt-4 grid gap-4 sm:grid-cols-2"><Field label="Is the vehicle currently starting?"><select className="field" value={form.careStarting} onChange={(e)=>update('careStarting',e.target.value)}><option value="yes">Yes</option><option value="not-sure">Not sure</option><option value="no">No</option></select></Field><Field label="How long has it been unused?"><select className="field" value={form.unusedDuration} onChange={(e)=>update('unusedDuration',e.target.value)}><option value="less-than-1-month">Less than 1 month</option><option value="1-3-months">1–3 months</option><option value="3-plus-months">3+ months</option></select></Field></div><div className="mt-4"><Field label="Key handover / access instructions"><input className="field" value={form.keyInstructions} onChange={(e)=>update('keyInstructions',e.target.value)} placeholder="Who has the key, security/gate instructions, etc."/></Field></div><label className={`permission-card mt-4 ${fieldErrors.drivePermission?'error':''}`}><input type="checkbox" checked={form.drivePermission} onChange={(e)=>update('drivePermission',e.target.checked)}/><span><strong>I authorise Aqua Haul to take the vehicle for a short run/drive of up to 5 km.</strong><small>Only where the vehicle appears safe and legally permitted to be driven. Aqua Haul will contact me if there is any concern before proceeding.</small></span></label>{fieldErrors.drivePermission&&<p className="font-body mt-2 text-xs font-bold text-[var(--terracotta-600)]">{fieldErrors.drivePermission}</p>}</div>}
 
