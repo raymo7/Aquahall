@@ -26,7 +26,7 @@ export async function POST(request) {
   if (!Number.isFinite(Number(latitude)) || !Number.isFinite(Number(longitude))) return bad('ADDRESS_NOT_SELECTED', 'Select a place from Google suggestions or use your current location.');
   if (!date || isNaN(Date.parse(date))) return bad('INVALID_DATE', 'Choose a valid service date.');
   if (!BOOKING_SLOTS.some((slot) => slot.id === slotId)) return bad('INVALID_SLOT', 'Choose an available time slot.');
-  if (!PAYMENT_METHODS.includes(paymentMethod)) return bad('INVALID_PAYMENT', 'Choose Pay Onsite or Pay Advance.');
+  if (!PAYMENT_METHODS.includes(paymentMethod)) return bad('INVALID_PAYMENT', 'Choose Pay Onsite or the ₹60 Booking Fee option.');
   if (notes && notes.length > MAX_LEN) return bad('NOTES_TOO_LONG', 'Notes must be under 500 characters.');
 
   const availability = await evaluateAvailability({ date, latitude, longitude });
