@@ -11,6 +11,8 @@ import {
   Loader2,
   LocateFixed,
   MessageCircle,
+  KeyRound,
+  ShieldCheck,
   Truck,
   Users,
 } from 'lucide-react';
@@ -26,6 +28,8 @@ import {
   resolveBooking,
 } from '../lib/pricing';
 import PaymentPanel from './PaymentPanel';
+import AddOnCard from './AddOnCard';
+import WashMotionDivider from './WashMotionDivider';
 import WaveDivider from './WaveDivider';
 
 const WHATSAPP_NUMBER = '918921167141';
@@ -79,8 +83,9 @@ function bookingWhatsApp(booking, paid = false) {
     `Name: ${booking.name}`,
     `Phone: ${booking.phone}`,
     booking.email ? `Email: ${booking.email}` : null,
-    `Vehicle: ${booking.vehicle_type}${booking.vehicle_model ? ` · ${booking.vehicle_model}` : ''}`,
-    `Service: ${booking.package_id ? 'Complete Care Wash' : 'Heavy Vehicle Wash'}`,
+    `Vehicles: ${booking.vehicle_count || 1}${Array.isArray(booking.vehicles) && booking.vehicles.length ? ` · ${booking.vehicles.map((v, i) => `#${i + 1} ${v.type}${v.model ? ` (${v.model})` : ''}`).join(' · ')}` : ` · ${booking.vehicle_type}${booking.vehicle_model ? ` (${booking.vehicle_model})` : ''}`}`,
+    `Service: ${booking.service_type === 'vehicle-care' ? 'Vehicle Care Visit' : booking.package_id ? 'Complete Care Wash' : 'Heavy Vehicle Wash'}`,
+    booking.group_offer ? `Group offer: Eligible for 20–30% · ${booking.group_location_mode === 'within-3km' ? 'locations within 3 km' : 'same location'}` : null,
     `Add-ons: ${(booking.alacarte || []).length ? booking.alacarte.map(serviceName).join(', ') : 'None'}`,
     `Date: ${formatDate(booking.booking_date)}`,
     `Time: ${booking.booking_time}`,
@@ -88,7 +93,9 @@ function bookingWhatsApp(booking, paid = false) {
     booking.map_address ? `Place: ${booking.map_address}` : null,
     mapsLink(booking.latitude, booking.longitude) ? `Google Maps: ${mapsLink(booking.latitude, booking.longitude)}` : null,
     booking.landmark ? `Landmark: ${booking.landmark}` : null,
-    `Estimated service total: ₹${booking.amount}${(booking.alacarte || []).includes('waterspot') ? ' + waterspot removal (subject to area)' : ''}`,
+    booking.service_type === 'vehicle-care' ? `Vehicle care: starting ${booking.care_details?.starting || 'not stated'} · unused ${booking.care_details?.unusedDuration || 'not stated'} · drive permission ${booking.care_details?.drivePermission ? 'YES' : 'NO'}` : null,
+    booking.service_type === 'vehicle-care' && booking.care_details?.keyInstructions ? `Key/access: ${booking.care_details.keyInstructions}` : null,
+    `Estimated service total: ₹${booking.amount}${(booking.alacarte || []).some((id) => ['enginebay','seatclean','waterspot'].includes(id)) ? ' + condition-based extras to be confirmed' : ''}`,
     `Payment: ${booking.payment_method === 'advance' ? (paid ? `₹${BOOKING_FEE} booking fee paid` : `₹${BOOKING_FEE} booking fee selected`) : 'Pay Onsite'}`,
     booking.notes ? `Notes: ${booking.notes}` : null,
     '',
@@ -99,15 +106,14 @@ function bookingWhatsApp(booking, paid = false) {
 }
 
 function enquiryWhatsApp({ form, resolved, distance, requestedSlot }) {
-  const service = categoryForVehicle(form.vehicleType) === 'heavy'
-    ? 'Heavy Vehicle Wash'
-    : 'Complete Care Wash';
+  const service = categoryForVehicle(form.vehicleType) === 'heavy' ? 'Heavy Vehicle Wash' : form.serviceType === 'vehicle-care' ? 'Vehicle Care Visit' : 'Complete Care Wash';
   const lines = [
     '📍 *Aqua Haul Service Availability Enquiry*',
     '',
     form.name ? `Name: ${form.name}` : null,
     form.phone ? `Phone: ${form.phone}` : null,
-    `Vehicle: ${form.vehicleType}${form.vehicleModel ? ` · ${form.vehicleModel}` : ''}`,
+    `Vehicles: ${form.vehicleCount} · ${form.vehicles.map((v, i) => `#${i + 1} ${v.type}${v.model ? ` (${v.model})` : ''}`).join(' · ')}`,
+    form.groupOffer ? `Group offer: 20–30% eligible · ${form.groupLocationMode === 'within-3km' ? 'within 3 km' : 'same location'}` : null,
     `Service: ${service}`,
     `Add-ons: ${form.alacarte.length ? form.alacarte.map(serviceName).join(', ') : 'None'}`,
     form.date ? `Preferred date: ${formatDate(form.date)}` : null,
@@ -144,8 +150,17 @@ export default function BookingForm() {
   const [outsideArea, setOutsideArea] = useState(false);
 
   const [form, setForm] = useState({
+    vehicleCount: 1,
+    vehicles: [{ type: '5-Seater', model: '' }],
     vehicleType: '5-Seater',
     vehicleModel: '',
+    serviceType: 'complete',
+    groupOffer: false,
+    groupLocationMode: 'same',
+    careStarting: 'yes',
+    unusedDuration: 'less-than-1-month',
+    drivePermission: false,
+    keyInstructions: '',
     alacarte: [],
     name: '',
     phone: '',
@@ -165,10 +180,21 @@ export default function BookingForm() {
 
   const category = categoryForVehicle(form.vehicleType);
   const resolved = useMemo(
-    () => resolveBooking({ vehicleType: form.vehicleType, alacarte: form.alacarte }),
-    [form.vehicleType, form.alacarte],
+    () => resolveBooking({ vehicleType: form.vehicleType, vehicles: form.vehicles, serviceType: form.serviceType, alacarte: form.alacarte }),
+    [form.vehicleType, form.vehicles, form.serviceType, form.alacarte],
   );
   const extras = CORE_SERVICES.filter((service) => service.selectable);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const requested = Math.max(1, Math.min(4, Number(params.get('vehicles')) || 1));
+    const service = params.get('service') === 'vehicle-care' ? 'vehicle-care' : 'complete';
+    const group = params.get('offer') === 'group' || requested >= 3;
+    setForm((current) => {
+      const vehicles = Array.from({ length: requested }, (_, index) => current.vehicles[index] || { type: '5-Seater', model: '' });
+      return { ...current, vehicleCount: requested, vehicles, vehicleType: vehicles[0].type, vehicleModel: vehicles[0].model || '', serviceType: service, groupOffer: group };
+    });
+  }, []);
 
   useEffect(() => {
     if (step === 0) return;
@@ -265,6 +291,21 @@ export default function BookingForm() {
     }));
   };
 
+  function setVehicleCount(count) {
+    const nextCount = Math.max(1, Math.min(4, Number(count) || 1));
+    setForm((current) => {
+      const vehicles = Array.from({ length: nextCount }, (_, index) => { const existing = current.vehicles[index] || { type: '5-Seater', model: '' }; return nextCount > 1 && existing.type === 'Heavy Vehicle' ? { ...existing, type: '5-Seater' } : existing; });
+      return { ...current, vehicleCount: nextCount, vehicles, vehicleType: vehicles[0].type, vehicleModel: vehicles[0].model || '', groupOffer: nextCount >= 3 };
+    });
+  }
+
+  function updateVehicle(index, key, value) {
+    setForm((current) => {
+      const vehicles = current.vehicles.map((vehicle, vehicleIndex) => vehicleIndex === index ? { ...vehicle, [key]: value } : vehicle);
+      return { ...current, vehicles, vehicleType: vehicles[0]?.type || '5-Seater', vehicleModel: vehicles[0]?.model || '' };
+    });
+  }
+
   async function chooseAddress(item) {
     setAddressBusy(true);
     setError('');
@@ -337,6 +378,7 @@ export default function BookingForm() {
     if (form.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) nextErrors.email = 'Enter a valid email address or leave it blank.';
     if (form.address.trim().length < 5) nextErrors.address = 'Enter your house name or exact address.';
     if (!Number.isFinite(Number(form.latitude)) || !Number.isFinite(Number(form.longitude))) nextErrors.mapAddress = 'Select a place from Google suggestions or use your current location.';
+    if (form.serviceType === 'vehicle-care' && !form.drivePermission) nextErrors.drivePermission = 'Please confirm owner permission for the short vehicle run/drive.';
     if (!form.date) nextErrors.date = 'Choose a service date.';
     if (!outsideArea && !availabilityBusy && !form.slotId) {
       nextErrors.slotId = slots.some((slot) => slot.available)
@@ -412,12 +454,14 @@ export default function BookingForm() {
         <div className="mx-auto mb-9 max-w-2xl text-center">
           <span className="font-label text-xs text-[var(--terracotta-600)]">BOOK YOUR SLOT</span>
           <h2 className="font-display mt-3 text-3xl text-[var(--teal-900)] sm:text-4xl">
-            Doorstep car care, planned around your route
+            A little care goes a long way
           </h2>
           <p className="font-body mt-3 text-sm leading-6 text-[var(--ink-muted)]">
-            Based in Kuravilangadu, serving nearby locations within approximately 20 km. Available slots adapt to existing bookings and travel time.
+            Choose a wash, an away-from-home care visit, or a group booking. We’ll match your location with an available route-aware slot.
           </p>
         </div>
+
+        <WashMotionDivider label="A smoother way to book your car care" />
 
         <div ref={wizardRef} className="mx-auto scroll-mt-24 overflow-hidden rounded-[28px] border border-[var(--teal-100)] bg-white shadow-[0_24px_70px_rgba(18,49,48,0.12)]">
           <div className="border-b border-[var(--teal-100)] px-5 py-5 sm:px-8">
@@ -435,58 +479,29 @@ export default function BookingForm() {
             <div className="p-5 sm:p-8 md:p-10">
               {step === 0 && (
                 <div>
-                  <h3 className="font-display text-2xl text-[var(--teal-900)]">Choose your vehicle</h3>
-                  <div className="mt-6 grid gap-3 sm:grid-cols-2">
-                    {VEHICLE_TYPES.map((vehicle) => {
-                      const Icon = ICONS[vehicle.value];
-                      const active = form.vehicleType === vehicle.value;
-                      return (
-                        <button key={vehicle.value} type="button" onClick={() => update('vehicleType', vehicle.value)} className={`pick-card p-5 text-left ${active ? 'active' : ''}`}>
-                          <div className="flex justify-between">
-                            <span className="rounded-2xl bg-[var(--teal-100)] p-3 text-[var(--teal-700)]"><Icon size={23} /></span>
-                            {active && <Check size={18} />}
-                          </div>
-                          <strong className="font-display mt-4 block text-xl text-[var(--teal-900)]">{vehicle.value}</strong>
-                          <span className="font-body mt-1 block text-xs text-[var(--ink-muted)]">{vehicle.description}</span>
-                          <span className="font-body mt-3 block font-bold text-[var(--terracotta-600)]">
-                            {vehicle.category === 'heavy' ? `From ₹${HEAVY_VEHICLE_PRICE}` : `₹${priceForPackage(vehicle.value)}`}
-                          </span>
-                        </button>
-                      );
-                    })}
-                  </div>
+                  <span className="font-label text-[10px] text-[var(--terracotta-600)]">YOUR VEHICLES</span>
+                  <h3 className="font-display mt-2 text-2xl text-[var(--teal-900)]">How many cars are we caring for?</h3>
+                  <p className="font-body mt-2 text-sm text-[var(--ink-muted)]">One car or a family fleet—tell us what is waiting at the location.</p>
+                  <div className="mt-5 grid grid-cols-4 gap-2">{[1,2,3,4].map((count)=><button key={count} type="button" onClick={()=>setVehicleCount(count)} className={`vehicle-count ${form.vehicleCount===count?'active':''}`}>{count}{count===4?'+':''}</button>)}</div>
+                  {form.vehicleCount >= 3 && <div className="booking-offer mt-5"><strong>Family & Friends saving unlocked</strong><p>Your group booking is eligible for 20–30% off when the cars are together at one location or within 3 km. We’ll confirm the exact saving before the service.</p><div className="mt-3 flex flex-wrap gap-2"><button type="button" onClick={()=>update('groupLocationMode','same')} className={`chip ${form.groupLocationMode==='same'?'active':''}`}>Same location</button><button type="button" onClick={()=>update('groupLocationMode','within-3km')} className={`chip ${form.groupLocationMode==='within-3km'?'active':''}`}>Within 3 km</button></div></div>}
+                  <div className="mt-6 space-y-4">{form.vehicles.map((vehicle,index)=><div key={index} className="vehicle-row"><div><span className="font-label text-[9px] text-[var(--terracotta-600)]">VEHICLE {index+1}</span><select className="field mt-2" value={vehicle.type} onChange={(e)=>updateVehicle(index,'type',e.target.value)}>{VEHICLE_TYPES.filter((item)=>form.vehicleCount===1 || item.category!=='heavy').map((item)=><option key={item.value} value={item.value}>{item.value} · {item.description}</option>)}</select></div><div><span className="font-body text-xs font-bold text-[var(--teal-900)]">Model (optional)</span><input className="field mt-2" value={vehicle.model || ''} onChange={(e)=>updateVehicle(index,'model',e.target.value)} placeholder="e.g. Baleno"/></div></div>)}</div>
                 </div>
               )}
 
               {step === 1 && (
                 <div>
-                  <h3 className="font-display text-2xl text-[var(--teal-900)]">Your service</h3>
-                  <div className="mt-5 rounded-3xl bg-[var(--teal-900)] p-6 text-white">
-                    {category !== 'heavy' ? (
-                      <>
-                        <span className="font-label text-[10px] text-[var(--gold-400)]">COMPLETE CARE WASH</span>
-                        <h4 className="font-display mt-3 text-3xl">Foam Wash + Interior Detailing</h4>
-                        <p className="font-body mt-2 text-sm text-[var(--teal-100)]">One complete package, with optional add-ons below.</p>
-                      </>
-                    ) : (
-                      <>
-                        <h4 className="font-display text-3xl">Heavy Vehicle Wash</h4>
-                        <p className="font-body mt-2 text-sm text-[var(--teal-100)]">Heavy vehicle service and pricing remain unchanged.</p>
-                      </>
-                    )}
-                  </div>
-                  <h4 className="font-display mt-7 text-xl text-[var(--teal-900)]">Optional add-ons</h4>
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {extras.map((service) => (
-                      <button key={service.id} type="button" onClick={() => toggle(service.id)} className={`chip ${form.alacarte.includes(service.id) ? 'active' : ''}`}>
-                        {service.name} · {addOnPriceLabel(service.id)}
-                      </button>
-                    ))}
-                  </div>
-                  <div className="booking-offer mt-6">
-                    <strong>3-car offer · Save 20–30%</strong>
-                    <p>For 3 family or friends’ cars at the same location, or within 3 km. Final discount depends on vehicles and selected services.</p>
-                  </div>
+                  <span className="font-label text-[10px] text-[var(--terracotta-600)]">CHOOSE YOUR CARE</span>
+                  <h3 className="font-display mt-2 text-2xl text-[var(--teal-900)]">What would you like us to do?</h3>
+                  {category === 'heavy' ? <div className="mt-5 rounded-3xl bg-[var(--teal-900)] p-6 text-white"><h4 className="font-display text-3xl">Heavy Vehicle Wash</h4><p className="font-body mt-2 text-sm text-[var(--teal-100)]">Dedicated cleaning for trucks, buses and machinery at your location.</p></div> : <div className="mt-5 grid gap-4 md:grid-cols-2">
+                    <button type="button" onClick={()=>update('serviceType','complete')} className={`service-choice ${form.serviceType==='complete'?'active':''}`}><span className="service-choice-icon"><Car size={24}/></span><span className="font-label text-[9px]">COMPLETE CARE WASH</span><strong>A fresh start, inside and out.</strong><small>Foam Wash + Interior Detailing at your doorstep.</small><b>From ₹{priceForPackage(form.vehicles[0]?.type || '5-Seater')}</b></button>
+                    <button type="button" onClick={()=>update('serviceType','vehicle-care')} className={`service-choice care ${form.serviceType==='vehicle-care'?'active':''}`}><span className="service-choice-icon"><KeyRound size={24}/></span><span className="font-label text-[9px]">VEHICLE CARE VISIT</span><strong>Away from home? We’ll check in on your car.</strong><small>Visual check, start-up, short run/drive up to 5 km where safe, wash + photo/video update.</small><b>₹1000 per vehicle</b></button>
+                  </div>}
+
+                  {form.serviceType === 'vehicle-care' && category !== 'heavy' && <div className="care-questions mt-6"><h4 className="font-display text-xl text-[var(--teal-900)]">A few details before we visit</h4><div className="mt-4 grid gap-4 sm:grid-cols-2"><Field label="Is the vehicle currently starting?"><select className="field" value={form.careStarting} onChange={(e)=>update('careStarting',e.target.value)}><option value="yes">Yes</option><option value="not-sure">Not sure</option><option value="no">No</option></select></Field><Field label="How long has it been unused?"><select className="field" value={form.unusedDuration} onChange={(e)=>update('unusedDuration',e.target.value)}><option value="less-than-1-month">Less than 1 month</option><option value="1-3-months">1–3 months</option><option value="3-plus-months">3+ months</option></select></Field></div><div className="mt-4"><Field label="Key handover / access instructions"><input className="field" value={form.keyInstructions} onChange={(e)=>update('keyInstructions',e.target.value)} placeholder="Who has the key, security/gate instructions, etc."/></Field></div><label className={`permission-card mt-4 ${fieldErrors.drivePermission?'error':''}`}><input type="checkbox" checked={form.drivePermission} onChange={(e)=>update('drivePermission',e.target.checked)}/><span><strong>I authorise Aqua Haul to take the vehicle for a short run/drive of up to 5 km.</strong><small>Only where the vehicle appears safe and legally permitted to be driven. Aqua Haul will contact me if there is any concern before proceeding.</small></span></label>{fieldErrors.drivePermission&&<p className="font-body mt-2 text-xs font-bold text-[var(--terracotta-600)]">{fieldErrors.drivePermission}</p>}</div>}
+
+                  <div className="mt-8 flex items-end justify-between gap-3"><div><span className="font-label text-[10px] text-[var(--terracotta-600)]">OPTIONAL EXTRAS</span><h4 className="font-display mt-1 text-xl text-[var(--teal-900)]">Finishing touches, priced fairly.</h4></div></div>
+                  <p className="font-body mt-2 text-sm text-[var(--ink-muted)]">Some services depend on dirt, stains or affected area. We’ll confirm any condition-based price before starting.</p>
+                  <div className="mt-4 grid gap-3 md:grid-cols-2">{extras.map((service)=><AddOnCard key={service.id} service={service} selected={form.alacarte.includes(service.id)} onClick={()=>toggle(service.id)}/>)}</div>
                 </div>
               )}
 
@@ -510,9 +525,7 @@ export default function BookingForm() {
                     <Field label="Email (optional)" error={fieldErrors.email}>
                       <input className="field" type="email" value={form.email} onChange={(event) => update('email', event.target.value)} />
                     </Field>
-                    <Field label="Vehicle model (optional)">
-                      <input className="field" value={form.vehicleModel} onChange={(event) => update('vehicleModel', event.target.value)} />
-                    </Field>
+                    <div className="rounded-2xl bg-[var(--cream-100)] p-4 text-sm text-[var(--ink-muted)]"><strong className="text-[var(--teal-900)]">{form.vehicleCount} vehicle{form.vehicleCount>1?'s':''}</strong><br/>{form.groupOffer ? 'Group offer eligibility will be confirmed with your final service price.' : 'Vehicle details saved from the first step.'}</div>
                   </div>
 
                   <div className="mt-5">
@@ -696,10 +709,10 @@ export default function BookingForm() {
 
             <aside className="bg-[var(--teal-900)] p-6 text-white lg:p-8">
               <span className="font-label text-[10px] text-[var(--gold-400)]">YOUR BOOKING</span>
-              <h4 className="font-display mt-3 text-2xl">Booking estimate</h4>
+              <h4 className="font-display mt-3 text-2xl">Estimated price</h4>
               <div className="font-body mt-6 space-y-3 text-sm">
-                <Summary label="Vehicle" value={form.vehicleType} />
-                <Summary label="Service" value={category === 'heavy' ? 'Heavy Vehicle Wash' : 'Complete Care Wash'} />
+                <Summary label="Vehicles" value={`${form.vehicleCount} · ${form.vehicles.map((v)=>v.type).join(", ")}`} />
+                <Summary label="Service" value={category === 'heavy' ? 'Heavy Vehicle Wash' : form.serviceType === 'vehicle-care' ? 'Vehicle Care Visit' : 'Complete Care Wash'} />
                 <Summary label="Extras" value={form.alacarte.length ? form.alacarte.map(serviceName).join(', ') : 'None'} />
                 <Summary label="Slot" value={selectedSlot?.label || (outsideArea ? 'WhatsApp enquiry' : 'Not selected')} />
                 <Summary label="Payment" value={form.paymentMethod === 'advance' ? `₹${BOOKING_FEE} booking fee` : 'Pay Onsite'} />
@@ -707,7 +720,8 @@ export default function BookingForm() {
               <div className="mt-8 border-t border-white/15 pt-6">
                 <span className="font-body text-xs text-[var(--teal-100)]">Estimated service total</span>
                 <strong className="font-display mt-1 block text-4xl">₹{resolved.amount}{resolved.variablePricing ? '+' : ''}</strong>
-                {resolved.variablePricing && <p className="font-body mt-2 text-xs leading-5 text-[var(--teal-100)]">Waterspot removal is priced after checking the affected area.</p>}
+                {resolved.variablePricing && <p className="font-body mt-2 text-xs leading-5 text-[var(--teal-100)]">Condition-based extras are not fully included in this estimate. We’ll confirm their price before work begins.</p>}
+                {form.groupOffer && <p className="font-body mt-2 rounded-xl bg-white/10 p-3 text-xs leading-5 text-[var(--teal-100)]">20–30% group saving eligible · final discount confirmed by Aqua Haul.</p>}
               </div>
             </aside>
           </div>
@@ -752,8 +766,8 @@ function Success({ booking, paid, onPaid, onReset }) {
             <h4 className="font-display text-2xl text-[var(--teal-900)]">Summary</h4>
             <div className="font-body mt-5 space-y-2 text-sm">
               <p><strong>{booking.name}</strong> · {booking.phone}</p>
-              <p>{booking.vehicle_type}</p>
-              <p>{(booking.services || []).map(serviceName).join(', ')}</p>
+              <p>{booking.vehicle_count || 1} vehicle{(booking.vehicle_count || 1) > 1 ? 's' : ''} · {Array.isArray(booking.vehicles) && booking.vehicles.length ? booking.vehicles.map((v)=>v.type).join(', ') : booking.vehicle_type}</p>
+              <p><strong>{booking.service_type === 'vehicle-care' ? 'Vehicle Care Visit' : booking.package_id ? 'Complete Care Wash' : 'Heavy Vehicle Wash'}</strong></p><p>{(booking.alacarte || []).length ? `Extras: ${(booking.alacarte || []).map(serviceName).join(', ')}` : 'No extras selected'}</p>{booking.group_offer && <p><strong>Group offer:</strong> 20–30% eligible</p>}
               <p>{formatDate(booking.booking_date)} · {booking.booking_time}</p>
               <p><strong>House:</strong> {booking.address}</p>
               {booking.map_address && <p><strong>Place:</strong> {booking.map_address}</p>}
@@ -762,8 +776,8 @@ function Success({ booking, paid, onPaid, onReset }) {
                 <a href={mapsLink(booking.latitude, booking.longitude)} target="_blank" rel="noreferrer" className="font-body text-sm font-bold text-[var(--teal-700)] underline">Open in Google Maps</a>
               )}
               <p className="font-body mt-3 text-xs font-bold uppercase tracking-wide text-[var(--ink-muted)]">Estimated service total</p>
-              <p className="font-display text-3xl text-[var(--terracotta-600)]">₹{booking.amount}{(booking.alacarte || []).includes('waterspot') ? '+' : ''}</p>
-              {(booking.alacarte || []).includes('waterspot') && <p className="font-body text-xs text-[var(--ink-muted)]">Waterspot removal: subject to affected area.</p>}
+              <p className="font-display text-3xl text-[var(--terracotta-600)]">₹{booking.amount}{(booking.alacarte || []).some((id)=>['enginebay','seatclean','waterspot'].includes(id)) ? '+' : ''}</p>
+              {(booking.alacarte || []).some((id)=>['enginebay','seatclean','waterspot'].includes(id)) && <p className="font-body text-xs text-[var(--ink-muted)]">Condition-based extras are confirmed before work begins.</p>}
             </div>
           </div>
           <div className="border-t bg-[var(--cream-50)] p-7 md:border-l md:border-t-0">
