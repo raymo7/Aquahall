@@ -15,7 +15,7 @@ export default function StandalonePayment() {
         <div className="rounded-3xl bg-[var(--cream-50)] p-5 text-left sm:p-7">
           <PaymentPanel amount={amount} note="Aqua Haul payment" editableAmount onAmountChange={setAmount} />
         </div>
-        <p className="font-body mt-4 text-xs leading-5 text-[var(--teal-100)]">For new bookings, use the booking flow above and choose Pay Onsite or Pay Advance.</p>
+        <p className="font-body mt-4 text-xs leading-5 text-[var(--teal-100)]">For new bookings, use the booking flow and choose Pay Onsite or the ₹60 Booking Fee option.</p>
       </div>
       <WaveDivider color="var(--cream-100)" />
     </section>

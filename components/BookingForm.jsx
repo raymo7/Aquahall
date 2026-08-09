@@ -19,7 +19,8 @@ import {
   HEAVY_VEHICLE_PRICE,
   PACKAGES,
   VEHICLE_TYPES,
-  addOnPrice,
+  BOOKING_FEE,
+  addOnPriceLabel,
   categoryForVehicle,
   priceForPackage,
   resolveBooking,
@@ -87,8 +88,8 @@ function bookingWhatsApp(booking, paid = false) {
     booking.map_address ? `Place: ${booking.map_address}` : null,
     mapsLink(booking.latitude, booking.longitude) ? `Google Maps: ${mapsLink(booking.latitude, booking.longitude)}` : null,
     booking.landmark ? `Landmark: ${booking.landmark}` : null,
-    `Amount: ₹${booking.amount}`,
-    `Payment: ${booking.payment_method === 'advance' ? (paid ? 'Advance payment completed' : 'Pay Advance') : 'Pay Onsite'}`,
+    `Estimated service total: ₹${booking.amount}${(booking.alacarte || []).includes('waterspot') ? ' + waterspot removal (subject to area)' : ''}`,
+    `Payment: ${booking.payment_method === 'advance' ? (paid ? `₹${BOOKING_FEE} booking fee paid` : `₹${BOOKING_FEE} booking fee selected`) : 'Pay Onsite'}`,
     booking.notes ? `Notes: ${booking.notes}` : null,
     '',
     'Please confirm my booking.',
@@ -116,7 +117,7 @@ function enquiryWhatsApp({ form, resolved, distance, requestedSlot }) {
     mapsLink(form.latitude, form.longitude) ? `Google Maps: ${mapsLink(form.latitude, form.longitude)}` : null,
     form.landmark ? `Landmark: ${form.landmark}` : null,
     distance != null ? `Approximate distance from Kuravilangadu: ${distance} km` : null,
-    `Estimated amount: ₹${resolved.amount}`,
+    `Estimated service total: ₹${resolved.amount}${resolved.variablePricing ? ' + variable-priced add-on' : ''}`,
     form.notes ? `Notes: ${form.notes}` : null,
     '',
     'Please let me know whether service is possible for this location/time.',
@@ -167,9 +168,7 @@ export default function BookingForm() {
     () => resolveBooking({ vehicleType: form.vehicleType, alacarte: form.alacarte }),
     [form.vehicleType, form.alacarte],
   );
-  const extras = category === 'heavy'
-    ? CORE_SERVICES
-    : CORE_SERVICES.filter((service) => !PACKAGES.complete.includes.includes(service.id));
+  const extras = CORE_SERVICES.filter((service) => service.selectable);
 
   useEffect(() => {
     if (step === 0) return;
@@ -480,9 +479,13 @@ export default function BookingForm() {
                   <div className="mt-3 flex flex-wrap gap-2">
                     {extras.map((service) => (
                       <button key={service.id} type="button" onClick={() => toggle(service.id)} className={`chip ${form.alacarte.includes(service.id) ? 'active' : ''}`}>
-                        {service.name} · +₹{addOnPrice(service.id)}
+                        {service.name} · {addOnPriceLabel(service.id)}
                       </button>
                     ))}
+                  </div>
+                  <div className="booking-offer mt-6">
+                    <strong>3-car offer · Save 20–30%</strong>
+                    <p>For 3 family or friends’ cars at the same location, or within 3 km. Final discount depends on vehicles and selected services.</p>
                   </div>
                 </div>
               )}
@@ -657,15 +660,15 @@ export default function BookingForm() {
 
               {step === 3 && (
                 <div>
-                  <h3 className="font-display text-2xl text-[var(--teal-900)]">Choose payment</h3>
+                  <h3 className="font-display text-2xl text-[var(--teal-900)]">Booking payment</h3>
                   <div className="mt-6 grid gap-4 sm:grid-cols-2">
                     <button type="button" onClick={() => update('paymentMethod', 'onsite')} className={`pick-card p-6 text-left ${form.paymentMethod === 'onsite' ? 'active' : ''}`}>
                       <strong className="font-display text-xl">Pay Onsite</strong>
                       <p className="font-body mt-2 text-sm text-[var(--ink-muted)]">Pay after the service by cash or UPI.</p>
                     </button>
                     <button type="button" onClick={() => update('paymentMethod', 'advance')} className={`pick-card p-6 text-left ${form.paymentMethod === 'advance' ? 'active' : ''}`}>
-                      <strong className="font-display text-xl">Pay Advance</strong>
-                      <p className="font-body mt-2 text-sm text-[var(--ink-muted)]">Pay using Google Pay or another UPI app after booking.</p>
+                      <strong className="font-display text-xl">₹{BOOKING_FEE} Booking Fee</strong>
+                      <p className="font-body mt-2 text-sm text-[var(--ink-muted)]">Reserve your slot with a fixed ₹{BOOKING_FEE} fee. The remaining amount is paid after service.</p>
                     </button>
                   </div>
                 </div>
@@ -693,17 +696,18 @@ export default function BookingForm() {
 
             <aside className="bg-[var(--teal-900)] p-6 text-white lg:p-8">
               <span className="font-label text-[10px] text-[var(--gold-400)]">YOUR BOOKING</span>
-              <h4 className="font-display mt-3 text-2xl">Live summary</h4>
+              <h4 className="font-display mt-3 text-2xl">Booking estimate</h4>
               <div className="font-body mt-6 space-y-3 text-sm">
                 <Summary label="Vehicle" value={form.vehicleType} />
                 <Summary label="Service" value={category === 'heavy' ? 'Heavy Vehicle Wash' : 'Complete Care Wash'} />
                 <Summary label="Extras" value={form.alacarte.length ? form.alacarte.map(serviceName).join(', ') : 'None'} />
                 <Summary label="Slot" value={selectedSlot?.label || (outsideArea ? 'WhatsApp enquiry' : 'Not selected')} />
-                <Summary label="Payment" value={form.paymentMethod === 'advance' ? 'Pay Advance' : 'Pay Onsite'} />
+                <Summary label="Payment" value={form.paymentMethod === 'advance' ? `₹${BOOKING_FEE} booking fee` : 'Pay Onsite'} />
               </div>
               <div className="mt-8 border-t border-white/15 pt-6">
-                <span className="font-body text-xs text-[var(--teal-100)]">Estimated total</span>
-                <strong className="font-display mt-1 block text-4xl">₹{resolved.amount}</strong>
+                <span className="font-body text-xs text-[var(--teal-100)]">Estimated service total</span>
+                <strong className="font-display mt-1 block text-4xl">₹{resolved.amount}{resolved.variablePricing ? '+' : ''}</strong>
+                {resolved.variablePricing && <p className="font-body mt-2 text-xs leading-5 text-[var(--teal-100)]">Waterspot removal is priced after checking the affected area.</p>}
               </div>
             </aside>
           </div>
@@ -757,13 +761,16 @@ function Success({ booking, paid, onPaid, onReset }) {
               {mapsLink(booking.latitude, booking.longitude) && (
                 <a href={mapsLink(booking.latitude, booking.longitude)} target="_blank" rel="noreferrer" className="font-body text-sm font-bold text-[var(--teal-700)] underline">Open in Google Maps</a>
               )}
-              <p className="font-display text-3xl text-[var(--terracotta-600)]">₹{booking.amount}</p>
+              <p className="font-body mt-3 text-xs font-bold uppercase tracking-wide text-[var(--ink-muted)]">Estimated service total</p>
+              <p className="font-display text-3xl text-[var(--terracotta-600)]">₹{booking.amount}{(booking.alacarte || []).includes('waterspot') ? '+' : ''}</p>
+              {(booking.alacarte || []).includes('waterspot') && <p className="font-body text-xs text-[var(--ink-muted)]">Waterspot removal: subject to affected area.</p>}
             </div>
           </div>
           <div className="border-t bg-[var(--cream-50)] p-7 md:border-l md:border-t-0">
             {advance && (
               <>
-                <PaymentPanel amount={String(booking.amount)} note={`Aqua Haul ${bookingRef(booking.id)}`} />
+                <div className="mb-3 rounded-2xl bg-white p-4"><p className="font-label text-[10px] text-[var(--terracotta-600)]">SLOT RESERVATION</p><p className="font-display mt-1 text-2xl text-[var(--teal-900)]">₹{BOOKING_FEE} booking fee</p><p className="font-body mt-1 text-xs text-[var(--ink-muted)]">This reserves your booking. Pay the remaining service amount after the wash.</p></div>
+                <PaymentPanel amount={String(BOOKING_FEE)} note={`Aqua Haul booking fee ${bookingRef(booking.id)}`} />
                 <button type="button" onClick={onPaid} className="btn-ghost-teal mt-4 w-full">I have completed the payment</button>
               </>
             )}

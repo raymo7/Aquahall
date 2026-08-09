@@ -1,10 +1,11 @@
 'use client';
-import { Check, Droplets, Zap, ArrowRight, Car, Users, Plus } from 'lucide-react';
-import { CORE_SERVICES, HEAVY_VEHICLE_PRICE, priceForPackage, addOnPrice } from '../lib/pricing';
+import { Check, Droplets, Zap, ArrowRight, Car, Users, Plus, BadgePercent } from 'lucide-react';
+import { CORE_SERVICES, HEAVY_VEHICLE_PRICE, priceForPackage, addOnPriceLabel } from '../lib/pricing';
 import WaveDivider from './WaveDivider';
 
 export default function PricingSection() {
   const book = () => { window.location.href = '/book'; };
+  const addOns = CORE_SERVICES.filter((service) => service.selectable);
   return (
     <section id="pricing" className="relative bg-[var(--cream-100)] px-4 py-16 sm:px-6 md:py-24">
       <div className="mx-auto max-w-6xl">
@@ -47,12 +48,17 @@ export default function PricingSection() {
         </div>
 
         <div className="mt-7 rounded-[28px] border border-[var(--teal-100)] bg-white p-6 sm:p-8">
-          <div className="flex items-center gap-3"><span className="rounded-xl bg-[var(--teal-100)] p-2 text-[var(--teal-700)]"><Plus size={20}/></span><div><h3 className="font-display text-2xl text-[var(--teal-900)]">Add-on services</h3><p className="font-body text-sm text-[var(--ink-muted)]">Keep the same service names, with simple add-on pricing.</p></div></div>
+          <div className="flex items-center gap-3"><span className="rounded-xl bg-[var(--teal-100)] p-2 text-[var(--teal-700)]"><Plus size={20}/></span><div><h3 className="font-display text-2xl text-[var(--teal-900)]">Add-on services</h3><p className="font-body text-sm text-[var(--ink-muted)]">Choose only what your vehicle needs.</p></div></div>
           <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {CORE_SERVICES.filter((service) => !['foam','interior'].includes(service.id)).map((service) => (
-              <div key={service.id} className="flex items-center justify-between rounded-2xl bg-[var(--cream-100)] px-4 py-3"><span className="font-body text-sm font-bold text-[var(--teal-900)]">{service.name}</span><strong className="font-display text-lg text-[var(--terracotta-600)]">+₹{addOnPrice(service.id)}</strong></div>
+            {addOns.map((service) => (
+              <div key={service.id} className="flex items-center justify-between gap-3 rounded-2xl bg-[var(--cream-100)] px-4 py-3"><span className="font-body text-sm font-bold text-[var(--teal-900)]">{service.name}</span><strong className="font-display text-right text-base text-[var(--terracotta-600)]">{addOnPriceLabel(service.id)}</strong></div>
             ))}
           </div>
+        </div>
+
+        <div className="offer-card mt-7">
+          <span className="offer-icon"><BadgePercent size={24}/></span>
+          <div><span className="font-label text-[10px] text-[var(--gold-400)]">GROUP WASH OFFER</span><h3 className="font-display mt-1 text-2xl">3 cars together? Save 20–30%</h3><p className="font-body mt-2 text-sm leading-6 text-[var(--teal-100)]">Book 3 cars from your family or friends at the same location, or within 3 km of each other, and receive 20–30% off. Final discount depends on the vehicles and selected services.</p></div>
         </div>
       </div>
       <WaveDivider color="var(--teal-700)" />
