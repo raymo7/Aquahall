@@ -557,3 +557,19 @@ footer {
 @media (min-width:760px){.home-package-card{grid-template-columns:1.2fr .8fr;align-items:center}}
 @media (max-width:767px){.home-hero-media{min-height:280px;border-radius:26px}.home-hero-media img{min-height:280px}.featured-carousel,.featured-carousel-image{height:360px;min-height:360px}.featured-carousel-copy{left:20px;right:20px;bottom:48px}.carousel-control{width:39px;height:39px}.carousel-dots{right:20px;bottom:18px}.page-banner{padding-top:42px;padding-bottom:38px}}
 @media (prefers-reduced-motion:reduce){.featured-carousel-image{animation:none!important}.quick-card{transition:none}}
+
+/* Compact footer, offer card and subtle Aqua Haul interaction effects */
+.offer-card { display:flex; align-items:center; gap:18px; border-radius:28px; padding:24px; background:linear-gradient(120deg,var(--teal-900),var(--teal-700)); color:#fff; box-shadow:0 18px 45px rgba(18,49,48,.18); }
+.offer-icon { display:grid; width:50px; height:50px; flex:0 0 auto; place-items:center; border-radius:17px; background:rgba(232,184,78,.16); color:var(--gold-400); }
+.offer-link { margin-left:auto; display:inline-flex; flex:0 0 auto; align-items:center; gap:7px; border-radius:999px; padding:11px 16px; background:var(--gold-400); color:var(--teal-900); font-size:13px; font-weight:900; text-decoration:none; }
+.booking-offer { border:1px solid rgba(200,90,46,.18); border-radius:18px; padding:14px 16px; background:var(--terracotta-100); color:var(--teal-900); }
+.booking-offer strong { font-family:'Fraunces',serif; }
+.booking-offer p { margin-top:3px; color:var(--ink-muted); font-size:12px; line-height:1.55; }
+.soap-pop { position:fixed; z-index:9999; width:1px; height:1px; pointer-events:none; }
+.soap-pop::before { content:''; position:absolute; left:-16px; top:-16px; width:32px; height:32px; border:2px solid rgba(107,190,196,.42); border-radius:999px; animation:waterRipple .68s ease-out forwards; }
+.soap-pop i { position:absolute; width:8px; height:8px; border:1.5px solid rgba(255,255,255,.9); border-radius:999px; background:rgba(107,190,196,.18); box-shadow:0 0 0 1px rgba(31,79,79,.1); animation:soapBubble .7s ease-out forwards; }
+.soap-pop i:nth-child(1){left:-4px;top:-6px}.soap-pop i:nth-child(2){left:8px;top:0;width:6px;height:6px;animation-delay:.03s}.soap-pop i:nth-child(3){left:-12px;top:4px;width:5px;height:5px;animation-delay:.06s}
+@keyframes waterRipple { 0%{transform:scale(.25);opacity:.85} 100%{transform:scale(1.8);opacity:0} }
+@keyframes soapBubble { 0%{transform:translate(0,0) scale(.7);opacity:.9} 100%{transform:translate(var(--bubble-x,8px),-30px) scale(1.3);opacity:0} }
+@media (max-width:767px){.offer-card{align-items:flex-start;flex-wrap:wrap;padding:20px}.offer-link{margin-left:0}.compact-footer{padding-top:2rem!important}.compact-footer>div:first-child{grid-template-columns:1fr 1fr}.compact-footer>div:first-child>div:first-child{grid-column:1/-1}.compact-footer>div:first-child>div:nth-child(2){grid-column:1/-1}}
+@media (prefers-reduced-motion:reduce){.soap-pop{display:none!important}}
