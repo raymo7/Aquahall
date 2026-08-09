@@ -739,7 +739,7 @@ footer {
 .care-scene .scene-caption { color:rgba(248,238,210,.72); }
 .scene-caption-dot { width:7px;height:7px;border-radius:50%;background:#d25e2f; box-shadow:0 0 0 5px rgba(210,94,47,.1); }
 .care-scene .scene-caption-dot { background:#e8b84e; box-shadow:0 0 0 5px rgba(232,184,78,.1); }
-@keyframes serviceTruckArrival { 0%,8%{transform:translateX(-220px)} 24%,76%{transform:translateX(0)} 92%,100%{transform:translateX(240px)} }
+@keyframes serviceTruckArrival { 0%,3%{transform:translateX(250px);opacity:0} 7%{opacity:1} 18%,82%{transform:translateX(0);opacity:1} 88%{transform:translateX(-36px);opacity:0} 89%,100%{transform:translateX(250px);opacity:0} } 24%,76%{transform:translateX(0)} 92%,100%{transform:translateX(240px)} }
 @keyframes washSpray { to{stroke-dashoffset:-38} }
 @keyframes foamFloat { 0%,100%{transform:translateY(3px);opacity:.35} 50%{transform:translateY(-8px);opacity:1} }
 @keyframes brushLine { from{stroke-dashoffset:0} to{stroke-dashoffset:44} }
@@ -752,16 +752,87 @@ footer {
 @keyframes phoneFloat { 50%{transform:translateY(-6px)} }
 @keyframes cameraPulse { 50%{r:8;opacity:.6} }
 
+
+/* Service animation storytelling: each action gets its own moment in the loop. */
+.wash-foam-phase,.wash-brush-phase,.wash-rinse-phase,.wash-shine-phase,
+.care-check-phase,.care-start-phase,.care-drive-phase,.care-wash-phase,.care-update-phase {
+  opacity:0;
+  transform-box:fill-box;
+  transform-origin:center;
+}
+.wash-foam-phase { animation:washFoamPhase 7s ease-in-out infinite; }
+.wash-brush-phase { animation:washBrushPhase 7s ease-in-out infinite; }
+.wash-rinse-phase { animation:washRinsePhase 7s ease-in-out infinite; }
+.wash-shine-phase { animation:washShinePhase 7s ease-in-out infinite; }
+.rinse-stream { fill:none;stroke:#54a7cc;stroke-width:7;stroke-linecap:round;stroke-dasharray:8 10;animation:washSpray .8s linear infinite; }
+.rinse-drop { fill:#54a7cc; }
+.shine-star { fill:#e8b84e; filter:drop-shadow(0 0 5px rgba(232,184,78,.45)); }
+.shine-star.small { opacity:.75; }
+
+.care-check-phase { animation:careCheckPhase 8s ease-in-out infinite; }
+.care-start-phase { animation:careStartPhase 8s ease-in-out infinite; }
+.care-drive-phase { animation:careDrivePhase 8s ease-in-out infinite; }
+.care-wash-phase { animation:careWashPhase 8s ease-in-out infinite; }
+.care-update-phase { animation:careUpdatePhase 8s ease-in-out infinite; }
+.care-headlight-pulse { stroke:#e8b84e;stroke-width:8;stroke-linecap:round;filter:drop-shadow(0 0 5px rgba(232,184,78,.4)); }
+.care-start-wave { fill:none;stroke:#7cc0ce;stroke-width:4;stroke-linecap:round; }
+.care-foam { fill:#eefafa;stroke:#8bc9d3;stroke-width:2; }
+
+@keyframes washFoamPhase {
+  0%,21%{opacity:0} 27%,42%{opacity:1} 47%,100%{opacity:0}
+}
+@keyframes washBrushPhase {
+  0%,39%{opacity:0} 45%,56%{opacity:1} 61%,100%{opacity:0}
+}
+@keyframes washRinsePhase {
+  0%,54%{opacity:0} 60%,70%{opacity:1} 75%,100%{opacity:0}
+}
+@keyframes washShinePhase {
+  0%,68%{opacity:0;transform:scale(.72)} 75%,84%{opacity:1;transform:scale(1)} 90%,100%{opacity:0;transform:scale(1.12)}
+}
+@keyframes careCheckPhase {
+  0%,18%{opacity:0} 23%,35%{opacity:1} 40%,100%{opacity:0}
+}
+@keyframes careStartPhase {
+  0%,32%{opacity:0} 37%,46%{opacity:1} 51%,100%{opacity:0}
+}
+@keyframes careDrivePhase {
+  0%,43%{opacity:0} 48%,58%{opacity:1} 63%,100%{opacity:0}
+}
+@keyframes careWashPhase {
+  0%,56%{opacity:0} 61%,71%{opacity:1} 76%,100%{opacity:0}
+}
+@keyframes careUpdatePhase {
+  0%,69%{opacity:0;transform:translateY(4px)} 75%,87%{opacity:1;transform:translateY(0)} 93%,100%{opacity:0;transform:translateY(-3px)}
+}
+
+.selected-service-summary { cursor:default!important; }
+.selected-service-summary:hover { transform:none!important; }
+.selected-service-note {
+  display:inline-flex;
+  width:max-content;
+  margin-top:8px;
+  padding:5px 9px;
+  border-radius:999px;
+  background:rgba(42,104,102,.1);
+  color:var(--teal-700);
+  font:700 10px 'Manrope',sans-serif;
+}
+.selected-service-summary.care .selected-service-note {
+  background:rgba(232,184,78,.13);
+  color:var(--gold-400);
+}
+
 @media (min-width: 1180px) {
   .primary-service-card-with-scene { grid-template-columns:minmax(0,1.05fr) minmax(240px,.95fr); align-items:center; }
   .primary-service-animation { min-height:270px; }
 }
 @media (max-width: 1179px) and (min-width: 641px) {
-  .primary-service-animation { min-height:230px; }
+  .primary-service-animation { min-height:240px; aspect-ratio:16/6.5; }
 }
 @media (max-width:640px) {
   .primary-service-card-with-scene { gap:18px; }
-  .primary-service-animation { min-height:178px; border-radius:20px; }
+  .primary-service-animation { min-height:190px; aspect-ratio:16/7; border-radius:20px; }
   .service-scene-art { bottom:12px; }
   .scene-caption { font-size:8px; }
 }
