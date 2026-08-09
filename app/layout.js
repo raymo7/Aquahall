@@ -1,4 +1,5 @@
 import './globals.css';
+import './home-blend.css';
 import WaterInteraction from '../components/WaterInteraction';
 
 export const metadata = {
