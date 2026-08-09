@@ -655,3 +655,153 @@
     transform-origin:center;
   }
 }
+
+
+/* === Final mobile hero / typography polish === */
+@media (max-width: 760px) {
+  .ah-hero {
+    min-height:680px;
+    background-position:59% center;
+  }
+
+  .ah-hero-inner {
+    min-height:680px;
+    padding:72px 0 38px;
+  }
+
+  .ah-hero-copy {
+    width:100%;
+    max-width:100%;
+  }
+
+  .ah-eyebrow {
+    display:block;
+    max-width:330px;
+    font-size:.76rem;
+    line-height:1.55;
+    letter-spacing:.12em;
+  }
+
+  .ah-hero-title {
+    max-width:620px;
+    margin-top:14px;
+    font-size:clamp(2.75rem, 12vw, 3.75rem);
+    line-height:1.01;
+    letter-spacing:-.035em;
+    text-wrap:balance;
+  }
+
+  .ah-hero-text {
+    max-width:560px;
+    margin-top:20px;
+    font-size:.96rem;
+    line-height:1.65;
+  }
+
+  .ah-hero-actions {
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+    width:min(100%, 560px);
+    margin-top:24px;
+  }
+
+  .ah-hero-actions .btn-primary,
+  .ah-outline-button {
+    width:100%;
+    min-width:0;
+    min-height:48px;
+    padding:0 14px;
+    font-size:.9rem;
+    white-space:nowrap;
+  }
+
+  .ah-trust-strip {
+    display:grid;
+    grid-template-columns:repeat(3, minmax(0,1fr));
+    width:min(100%, 590px);
+    gap:7px;
+    margin-top:22px;
+  }
+
+  .ah-trust-strip span {
+    justify-content:center;
+    min-width:0;
+    padding:7px 5px;
+    font-size:.7rem;
+    white-space:nowrap;
+  }
+}
+
+@media (max-width: 430px) {
+  .ah-hero {
+    min-height:660px;
+    background-position:58% center;
+  }
+
+  .ah-hero-inner {
+    min-height:660px;
+    padding-top:64px;
+    padding-bottom:32px;
+  }
+
+  .ah-eyebrow {
+    max-width:280px;
+    font-size:.7rem;
+  }
+
+  .ah-hero-title {
+    font-size:clamp(2.55rem, 11.6vw, 3.15rem);
+    line-height:1.015;
+  }
+
+  .ah-hero-text {
+    margin-top:17px;
+    font-size:.91rem;
+    line-height:1.6;
+  }
+
+  .ah-hero-actions {
+    gap:8px;
+    margin-top:21px;
+  }
+
+  .ah-hero-actions .btn-primary,
+  .ah-outline-button {
+    min-height:46px;
+    padding-inline:10px;
+    font-size:.82rem;
+  }
+
+  .ah-trust-strip {
+    gap:5px;
+    margin-top:18px;
+  }
+
+  .ah-trust-strip span {
+    gap:4px;
+    padding:7px 3px;
+    font-size:.62rem;
+  }
+
+  .ah-trust-strip svg {
+    width:13px;
+    height:13px;
+    flex:0 0 auto;
+  }
+}
+
+/* Narrow phones: buttons stack before labels become cramped. */
+@media (max-width: 355px) {
+  .ah-hero-actions {
+    grid-template-columns:1fr;
+  }
+
+  .ah-trust-strip {
+    grid-template-columns:1fr 1fr;
+  }
+
+  .ah-trust-strip span:last-child {
+    grid-column:1 / -1;
+  }
+}
