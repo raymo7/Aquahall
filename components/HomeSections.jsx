@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import {
   ArrowRight,
   BadgePercent,
@@ -29,66 +30,106 @@ export default function HomeSections() {
         id="home"
         className="relative isolate overflow-hidden bg-[var(--teal-900)]"
       >
-        <div
-          className="absolute inset-0 bg-cover bg-[position:60%_center] sm:bg-center"
-          style={{ backgroundImage: "url('/gallery/wash_photo.webp')" }}
-          aria-hidden="true"
-        />
-        <div
-          className="absolute inset-0"
-          style={{
-            background:
-              'linear-gradient(90deg, rgba(9,42,40,.97) 0%, rgba(9,42,40,.92) 38%, rgba(9,42,40,.62) 66%, rgba(9,42,40,.28) 100%)',
-          }}
-          aria-hidden="true"
-        />
-        <div
-          className="absolute inset-0 md:hidden"
-          style={{
-            background:
-              'linear-gradient(180deg, rgba(9,42,40,.42) 0%, rgba(9,42,40,.70) 34%, rgba(9,42,40,.94) 78%, rgba(9,42,40,1) 100%)',
-          }}
-          aria-hidden="true"
-        />
+        {/* Mobile: the photo gets its own visual area, then softly fades into solid teal
+            before the headline. This keeps the real-photo feel without putting busy
+            truck details behind the text. */}
+        <div className="absolute inset-x-0 top-0 h-[315px] md:hidden" aria-hidden="true">
+          <Image
+            src="/gallery/wash_photo.webp"
+            alt=""
+            fill
+            priority
+            fetchPriority="high"
+            quality={82}
+            sizes="100vw"
+            className="object-cover object-[58%_center]"
+          />
+          <div
+            className="absolute inset-0"
+            style={{
+              background:
+                'linear-gradient(180deg, rgba(8,41,39,.08) 0%, rgba(8,41,39,.18) 48%, rgba(8,41,39,.78) 78%, rgba(8,41,39,1) 100%)',
+            }}
+          />
+          <div
+            className="absolute inset-0"
+            style={{
+              background:
+                'linear-gradient(90deg, rgba(8,41,39,.45) 0%, rgba(8,41,39,.10) 58%, rgba(8,41,39,.02) 100%)',
+            }}
+          />
+        </div>
 
-        <div className="relative mx-auto flex min-h-[690px] max-w-6xl items-end px-5 pb-12 pt-24 md:min-h-[620px] md:items-center md:py-20">
+        {/* Tablet/desktop: image stays on the right and fades seamlessly into the
+            solid brand background on the left. */}
+        <div className="absolute inset-y-0 right-0 hidden w-[64%] md:block" aria-hidden="true">
+          <Image
+            src="/gallery/wash_photo.webp"
+            alt=""
+            fill
+            priority
+            fetchPriority="high"
+            quality={82}
+            sizes="(min-width: 768px) 64vw, 100vw"
+            className="object-cover object-center"
+          />
+          <div
+            className="absolute inset-0"
+            style={{
+              background:
+                'linear-gradient(90deg, rgba(8,41,39,1) 0%, rgba(8,41,39,.92) 18%, rgba(8,41,39,.54) 48%, rgba(8,41,39,.16) 76%, rgba(8,41,39,.08) 100%)',
+            }}
+          />
+          <div
+            className="absolute inset-0"
+            style={{
+              background:
+                'linear-gradient(180deg, rgba(8,41,39,.12) 0%, rgba(8,41,39,.08) 64%, rgba(8,41,39,.65) 100%)',
+            }}
+          />
+        </div>
+
+        <div className="relative mx-auto max-w-6xl px-5 pb-12 pt-[285px] md:flex md:min-h-[620px] md:items-center md:py-20">
           <div className="max-w-[610px]">
-            <span className="font-label text-xs tracking-[.16em] text-[var(--gold-400)]">
+            <span className="font-label text-[11px] tracking-[.15em] text-[var(--gold-400)] sm:text-xs">
               DOORSTEP VEHICLE CARE · KURAVILANGADU
             </span>
 
-            <h1 className="font-display mt-4 max-w-[600px] text-[2.9rem] leading-[1.02] tracking-[-.035em] text-[var(--cream-50)] sm:text-6xl md:text-7xl">
+            <h1 className="font-display mt-4 max-w-[590px] text-[2.72rem] leading-[1.02] tracking-[-.035em] text-[var(--cream-50)] sm:text-[3.45rem] md:text-7xl">
               Care for your car, even when life keeps you away.
             </h1>
 
-            <p className="font-body mt-5 max-w-xl text-base leading-7 text-[var(--teal-100)] md:text-lg">
+            <p className="font-body mt-5 max-w-xl text-[15px] leading-7 text-[var(--teal-100)] sm:text-base md:text-lg">
               From a complete doorstep wash to a thoughtful vehicle-care visit,
               Aqua Haul keeps your car clean, checked and looked after at home.
             </p>
 
-            <div className="mt-7 flex flex-wrap gap-3">
-              <Link href="/book" className="btn-primary inline-flex items-center gap-2">
+            <div className="mt-7 grid max-w-[570px] grid-cols-2 gap-3">
+              <Link
+                href="/book"
+                className="btn-primary inline-flex min-h-[50px] items-center justify-center gap-2 px-4 text-center text-[15px] sm:text-base"
+              >
                 Book your care <ArrowRight size={18} />
               </Link>
               <Link
                 href="/services"
-                className="inline-flex min-h-[50px] items-center justify-center rounded-full border-2 border-white px-6 font-bold text-white transition hover:bg-white hover:text-[var(--teal-900)]"
+                className="inline-flex min-h-[50px] items-center justify-center rounded-full border-2 border-[var(--cream-50)] bg-[rgba(8,41,39,.62)] px-4 text-center text-[15px] font-bold !text-[var(--cream-50)] shadow-[0_8px_24px_rgba(0,0,0,.18)] backdrop-blur-sm transition hover:bg-[var(--cream-50)] hover:!text-[var(--teal-900)] sm:text-base"
               >
                 Explore services
               </Link>
             </div>
 
-            <div className="mt-6 flex flex-wrap gap-2.5 text-sm text-[var(--teal-100)]">
-              <span className="hero-pill"><Droplets size={15} /> Own water</span>
-              <span className="hero-pill"><Zap size={15} /> Own power</span>
-              <span className="hero-pill"><ShieldCheck size={15} /> Professional care</span>
+            <div className="mt-6 grid max-w-[610px] grid-cols-3 gap-2 text-[11px] text-[var(--teal-100)] sm:text-sm">
+              <span className="hero-pill justify-center whitespace-nowrap"><Droplets size={15} /> Own water</span>
+              <span className="hero-pill justify-center whitespace-nowrap"><Zap size={15} /> Own power</span>
+              <span className="hero-pill justify-center whitespace-nowrap"><ShieldCheck size={15} /> Professional care</span>
             </div>
 
             <div className="mt-6 max-w-xl border-l-2 border-[var(--gold-400)] pl-4">
-              <p className="font-display text-xl leading-relaxed text-[var(--cream-50)] sm:text-2xl" lang="ml">
+              <p className="font-display text-[1.15rem] leading-[1.65] text-[var(--cream-50)] sm:text-2xl" lang="ml">
                 വെള്ളം വേണ്ട, കറന്റ് വേണ്ട — Aqua Haul വന്നാൽ മതി! 💧⚡
               </p>
-              <p className="font-body mt-2 text-sm tracking-wide text-[var(--teal-100)]">
+              <p className="font-body mt-1.5 text-[13px] tracking-wide text-[var(--teal-100)] sm:text-sm">
                 Your car. Your doorstep. Our water. Our power.
               </p>
             </div>
