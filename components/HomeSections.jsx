@@ -55,14 +55,18 @@ export default function HomeSections() {
               <span className="hero-pill"><Zap size={15} /> Own power</span>
               <span className="hero-pill"><ShieldCheck size={15} /> Professional care</span>
             </div>
+
+            <div className="mt-6 max-w-xl border-l-2 border-[var(--gold-400)] pl-4">
+              <p className="font-display text-xl leading-relaxed text-[var(--cream-50)] sm:text-2xl" lang="ml">
+                വെള്ളം വേണ്ട, കറന്റ് വേണ്ട — Aqua Haul വന്നാൽ മതി! 💧⚡
+              </p>
+              <p className="font-body mt-2 text-sm tracking-wide text-[var(--teal-100)]">
+                Your car. Your doorstep. Our water. Our power.
+              </p>
+            </div>
           </div>
 
           <div className="home-hero-media">
-            <div className="home-hero-badge">
-              <Droplets size={18} /> Own water
-              <span>+</span>
-              <Zap size={18} /> Own power
-            </div>
             <img
               src="/gallery/wash_photo.webp"
               alt="Aqua Haul team providing a doorstep car wash beside the mobile service vehicle"
@@ -98,17 +102,18 @@ export default function HomeSections() {
         <div className="mx-auto max-w-6xl">
           <div className="mx-auto max-w-2xl text-center">
             <span className="font-label text-xs text-[var(--terracotta-600)]">
-              THREE WAYS WE CARE
+              TWO WAYS WE CARE
             </span>
             <h2 className="font-display mt-3 text-3xl text-[var(--teal-900)] md:text-5xl">
-              From everyday cars to heavy vehicles — care that comes to you.
+              More than a wash. Care that follows your life.
             </h2>
             <p className="font-body mt-3 text-[var(--ink-muted)]">
-              Choose a complete doorstep wash, book a fixed-price heavy vehicle wash, or let us look after a car that has been sitting unused while you are away.
+              Choose a fresh doorstep clean, or let us look after a vehicle
+              that has been sitting unused while you are away.
             </p>
           </div>
 
-          <div className="mt-10 grid gap-5 lg:grid-cols-2 xl:grid-cols-3">
+          <div className="mt-10 grid gap-5 lg:grid-cols-2">
             <div className="primary-service-card primary-service-card-with-scene">
               <div className="primary-service-content">
                 <div className="primary-service-icon"><Droplets size={26} /></div>
@@ -126,6 +131,7 @@ export default function HomeSections() {
                 <div className="service-price-row">
                   <span>5-Seater <b>₹{priceForPackage('5-Seater')}</b></span>
                   <span>7-Seater <b>₹{priceForPackage('7-Seater')}</b></span>
+                  <span>Heavy Wash <b>₹{HEAVY_VEHICLE_PRICE}</b></span>
                 </div>
 
                 <Link
@@ -169,29 +175,6 @@ export default function HomeSections() {
 
               <PrimaryServiceAnimation variant="care" />
             </div>
-
-            <div className="primary-service-card primary-service-card-with-scene">
-              <div className="primary-service-content">
-                <div className="primary-service-icon"><Truck size={26} /></div>
-                <span className="font-label text-[10px] text-[var(--terracotta-600)]">
-                  HEAVY VEHICLE COMPLETE WASH
-                </span>
-                <h3 className="font-display mt-2 text-3xl text-[var(--teal-900)]">
-                  Bigger vehicle. Same doorstep convenience.
-                </h3>
-                <p>
-                  A complete wash for trucks, buses and other heavy vehicles,
-                  brought to your location with our own water, power and equipment.
-                </p>
-                <strong className="font-display mt-5 block text-4xl text-[var(--teal-900)]">
-                  ₹{HEAVY_VEHICLE_PRICE}
-                </strong>
-                <p className="mt-2 text-sm">Fixed complete-wash price. Add-ons are separate where applicable.</p>
-                <Link href="/book?vehicle=Heavy%20Vehicle&service=heavy" className="btn-primary mt-6 inline-flex items-center gap-2">
-                  Book heavy vehicle wash <ArrowRight size={17} />
-                </Link>
-              </div>
-            </div>
           </div>
 
           <div className="mt-5 rounded-3xl border border-[var(--teal-100)] bg-white p-5 text-sm text-[var(--ink-muted)]">
@@ -233,6 +216,40 @@ export default function HomeSections() {
         </div>
       </section>
 
+      {/* Equipment / mobile setup */}
+      <section className="home-section bg-[var(--teal-900)] px-4 py-16 sm:px-6 md:py-20">
+        <div className="mx-auto grid max-w-6xl items-center gap-8 md:grid-cols-[1.05fr_.95fr]">
+          <div className="overflow-hidden rounded-[2rem] border border-white/10">
+            <img
+              src="/gallery/truck.webp"
+              alt="Aqua Haul mobile service vehicle ready for doorstep car care"
+              className="h-full min-h-[280px] w-full object-cover"
+            />
+          </div>
+
+          <div>
+            <span className="font-label text-xs text-[var(--gold-400)]">
+              FULLY EQUIPPED. WHEREVER YOU ARE.
+            </span>
+            <h2 className="font-display mt-3 text-3xl leading-tight text-white md:text-5xl">
+              We bring everything needed for a proper wash.
+            </h2>
+            <p className="font-body mt-4 max-w-xl leading-7 text-[var(--teal-100)]">
+              Our mobile setup is designed to work independently at your
+              location, so your taps and sockets can stay untouched.
+            </p>
+
+            <div className="mt-7 grid gap-3 sm:grid-cols-2">
+              <Equipment icon={Droplets} text="Own water supply" />
+              <Equipment icon={Zap} text="Own power supply" />
+              <Equipment icon={Truck} text="Mobile equipment setup" />
+              <Equipment icon={Check} text="Ready for doorstep service" />
+            </div>
+          </div>
+        </div>
+      </section>
+
+
       {/* Real team story */}
       <section className="home-section bg-white px-4 py-16 sm:px-6 md:py-24">
         <div className="mx-auto grid max-w-6xl items-center gap-8 overflow-hidden rounded-[2rem] border border-[var(--teal-100)] bg-[var(--cream-50)] p-5 shadow-sm md:grid-cols-[.9fr_1.1fr] md:p-8">
@@ -264,44 +281,6 @@ export default function HomeSections() {
               alt="Aqua Haul team standing with the mobile service vehicle"
               className="h-full min-h-[280px] w-full object-cover"
             />
-          </div>
-        </div>
-      </section>
-
-      {/* Equipment / mobile setup */}
-      <section className="home-section bg-[var(--teal-900)] px-4 py-16 sm:px-6 md:py-20">
-        <div className="mx-auto grid max-w-6xl items-center gap-8 md:grid-cols-[1.05fr_.95fr]">
-          <div className="overflow-hidden rounded-[2rem] border border-white/10">
-            <img
-              src="/gallery/truck.webp"
-              alt="Aqua Haul mobile service vehicle ready for doorstep car care"
-              className="h-full min-h-[280px] w-full object-cover"
-            />
-          </div>
-
-          <div>
-            <span className="font-label text-xs text-[var(--gold-400)]">
-              OUR WATER. OUR POWER. YOUR DOORSTEP.
-            </span>
-            <h2 className="font-display mt-3 text-3xl leading-tight text-white md:text-5xl">
-              Your car. Your doorstep. Our water. Our power.
-            </h2>
-            <p className="font-body mt-4 max-w-xl leading-7 text-[var(--teal-100)]">
-              Aqua Haul arrives ready to work. We carry our own water, power and professional equipment, so you don’t need to arrange a tap, hose or electrical connection.
-            </p>
-
-            <div className="mt-6 rounded-2xl border border-[var(--gold-400)]/30 bg-white/5 px-5 py-4">
-              <p className="text-lg font-bold leading-8 text-white md:text-xl" lang="ml">
-                വെള്ളം വേണ്ട, കറന്റ് വേണ്ട — Aqua Haul വന്നാൽ മതി! 💧⚡
-              </p>
-            </div>
-
-            <div className="mt-7 grid gap-3 sm:grid-cols-2">
-              <Equipment icon={Droplets} text="Own water supply" />
-              <Equipment icon={Zap} text="Own power supply" />
-              <Equipment icon={Truck} text="Mobile equipment setup" />
-              <Equipment icon={Check} text="Ready for doorstep service" />
-            </div>
           </div>
         </div>
       </section>
