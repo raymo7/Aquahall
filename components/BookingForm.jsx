@@ -540,6 +540,17 @@ export default function BookingForm() {
 
   const selectedSlot = slots.find((slot) => slot.id === form.slotId);
 
+  const completeBaseTotal = vehicleList.reduce(
+    (sum, vehicle) => sum + priceForPackage(vehicle.type),
+    0,
+  );
+
+  const vehiclePriceBreakdown = vehicleList
+    .map((vehicle) => `${vehicle.type} ₹${priceForPackage(vehicle.type)}`)
+    .join(' + ');
+
+  const multipleVehicles = vehicleList.length > 1;
+
   return (
     <section id="booking" className="relative overflow-hidden bg-[var(--cream-100)] px-4 py-16 sm:px-6 md:py-24">
       <div className="mx-auto max-w-6xl">
@@ -595,6 +606,22 @@ export default function BookingForm() {
                       <p className="font-body mt-2 text-sm text-[var(--teal-100)]">
                         Dedicated cleaning for trucks, buses and machinery at your location.
                       </p>
+                      <div className="mt-5 border-t border-white/15 pt-4">
+                        <span className="font-body text-xs text-[var(--teal-100)]">
+                          {multipleVehicles ? 'Estimated base total' : 'Base wash'}
+                        </span>
+                        <strong className="font-display mt-1 block text-3xl text-[var(--gold-400)]">
+                          ₹{completeBaseTotal}
+                        </strong>
+                        {multipleVehicles && (
+                          <p className="font-body mt-2 text-xs leading-5 text-[var(--teal-100)]">
+                            {vehiclePriceBreakdown}
+                          </p>
+                        )}
+                        <p className="font-body mt-2 text-[11px] text-[var(--teal-100)]">
+                          Add-ons are calculated separately.
+                        </p>
+                      </div>
                     </div>
                   ) : lockedService ? (
                     <div className={`service-choice selected-service-summary mt-5 ${form.serviceType === 'vehicle-care' ? 'care active' : 'active'}`}>
@@ -614,12 +641,42 @@ export default function BookingForm() {
                           ? 'Visual check, start-up, short run/drive up to 5 km where safe, wash + photo/video update.'
                           : 'Foam Wash + Interior Detailing at your doorstep.'}
                       </small>
-                      <b>
-                        {form.serviceType === 'vehicle-care'
-                          ? '₹1000 per vehicle'
-                          : `From ₹${priceForPackage(form.vehicles[0]?.type || '5-Seater')}`}
-                      </b>
-                      <span className="selected-service-note">Selected from the previous page</span>
+                      {form.serviceType === 'vehicle-care' ? (
+                        <>
+                          <b>₹1000 per vehicle</b>
+                          <span className="selected-service-note">
+                            {vehicleList.length} {vehicleList.length === 1 ? 'vehicle' : 'vehicles'} selected
+                          </span>
+                        </>
+                      ) : (
+                        <>
+                          <b>
+                            {multipleVehicles
+                              ? `Estimated base total ₹${completeBaseTotal}`
+                              : `From ₹${completeBaseTotal}`}
+                          </b>
+
+                          {multipleVehicles && (
+                            <small className="selected-service-breakdown">
+                              {vehiclePriceBreakdown}
+                            </small>
+                          )}
+
+                          <span className="selected-service-note">
+                            {vehicleList.length} {vehicleList.length === 1 ? 'vehicle' : 'vehicles'} selected
+                          </span>
+
+                          <small className="selected-service-price-note">
+                            Add-ons are calculated separately.
+                          </small>
+
+                          {form.vehicleCount >= 3 && (
+                            <small className="selected-service-offer-note">
+                              Group discount eligibility: 20–30% · final saving confirmed after review.
+                            </small>
+                          )}
+                        </>
+                      )}
                     </div>
                   ) : (
                     <div className="mt-5 grid gap-4 md:grid-cols-2">
@@ -628,7 +685,19 @@ export default function BookingForm() {
                         <span className="font-label text-[9px]">COMPLETE CARE WASH</span>
                         <strong>A fresh start, inside and out.</strong>
                         <small>Foam Wash + Interior Detailing at your doorstep.</small>
-                        <b>From ₹{priceForPackage(form.vehicles[0]?.type || '5-Seater')}</b>
+                        <b>
+                          {multipleVehicles
+                            ? `Estimated base total ₹${completeBaseTotal}`
+                            : `From ₹${completeBaseTotal}`}
+                        </b>
+                        {multipleVehicles && (
+                          <small className="selected-service-breakdown">
+                            {vehiclePriceBreakdown}
+                          </small>
+                        )}
+                        <small className="selected-service-price-note">
+                          Add-ons calculated separately.
+                        </small>
                       </button>
                       {!hasHeavyVehicle && (
                         <button type="button" onClick={()=>update('serviceType','vehicle-care')} className={`service-choice care ${form.serviceType==='vehicle-care'?'active':''}`}>
