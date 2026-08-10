@@ -25,14 +25,39 @@ import { HEAVY_VEHICLE_PRICE, VEHICLE_CARE_PRICE, priceForPackage } from '../lib
 export default function HomeSections() {
   return (
     <>
-      <section id="home" className="home-hero">
-        <div className="mx-auto grid max-w-6xl items-center gap-10 px-5 py-16 md:grid-cols-[1.05fr_.95fr] md:py-24">
-          <div>
-            <span className="font-label text-xs text-[var(--gold-400)]">
+      <section
+        id="home"
+        className="relative isolate overflow-hidden bg-[var(--teal-900)]"
+      >
+        <div
+          className="absolute inset-0 bg-cover bg-[position:60%_center] sm:bg-center"
+          style={{ backgroundImage: "url('/gallery/wash_photo.webp')" }}
+          aria-hidden="true"
+        />
+        <div
+          className="absolute inset-0"
+          style={{
+            background:
+              'linear-gradient(90deg, rgba(9,42,40,.97) 0%, rgba(9,42,40,.92) 38%, rgba(9,42,40,.62) 66%, rgba(9,42,40,.28) 100%)',
+          }}
+          aria-hidden="true"
+        />
+        <div
+          className="absolute inset-0 md:hidden"
+          style={{
+            background:
+              'linear-gradient(180deg, rgba(9,42,40,.42) 0%, rgba(9,42,40,.70) 34%, rgba(9,42,40,.94) 78%, rgba(9,42,40,1) 100%)',
+          }}
+          aria-hidden="true"
+        />
+
+        <div className="relative mx-auto flex min-h-[690px] max-w-6xl items-end px-5 pb-12 pt-24 md:min-h-[620px] md:items-center md:py-20">
+          <div className="max-w-[610px]">
+            <span className="font-label text-xs tracking-[.16em] text-[var(--gold-400)]">
               DOORSTEP VEHICLE CARE · KURAVILANGADU
             </span>
 
-            <h1 className="font-display mt-4 text-4xl leading-tight text-[var(--cream-50)] sm:text-5xl md:text-6xl">
+            <h1 className="font-display mt-4 max-w-[600px] text-[2.9rem] leading-[1.02] tracking-[-.035em] text-[var(--cream-50)] sm:text-6xl md:text-7xl">
               Care for your car, even when life keeps you away.
             </h1>
 
@@ -41,16 +66,19 @@ export default function HomeSections() {
               Aqua Haul keeps your car clean, checked and looked after at home.
             </p>
 
-            <div className="mt-8 flex flex-wrap gap-3">
+            <div className="mt-7 flex flex-wrap gap-3">
               <Link href="/book" className="btn-primary inline-flex items-center gap-2">
                 Book your care <ArrowRight size={18} />
               </Link>
-              <Link href="/services" className="btn-outline inline-flex items-center">
+              <Link
+                href="/services"
+                className="inline-flex min-h-[50px] items-center justify-center rounded-full border-2 border-white px-6 font-bold text-white transition hover:bg-white hover:text-[var(--teal-900)]"
+              >
                 Explore services
               </Link>
             </div>
 
-            <div className="mt-7 flex flex-wrap gap-3 text-sm text-[var(--teal-100)]">
+            <div className="mt-6 flex flex-wrap gap-2.5 text-sm text-[var(--teal-100)]">
               <span className="hero-pill"><Droplets size={15} /> Own water</span>
               <span className="hero-pill"><Zap size={15} /> Own power</span>
               <span className="hero-pill"><ShieldCheck size={15} /> Professional care</span>
@@ -64,13 +92,6 @@ export default function HomeSections() {
                 Your car. Your doorstep. Our water. Our power.
               </p>
             </div>
-          </div>
-
-          <div className="home-hero-media">
-            <img
-              src="/gallery/wash_photo.webp"
-              alt="Aqua Haul team providing a doorstep car wash beside the mobile service vehicle"
-            />
           </div>
         </div>
       </section>
@@ -131,7 +152,7 @@ export default function HomeSections() {
                 <div className="service-price-row">
                   <span>5-Seater <b>₹{priceForPackage('5-Seater')}</b></span>
                   <span>7-Seater <b>₹{priceForPackage('7-Seater')}</b></span>
-                  <span>Heavy Wash <b>₹{HEAVY_VEHICLE_PRICE}</b></span>
+                  <span>Heavy Vehicle Wash <b>₹{HEAVY_VEHICLE_PRICE}</b></span>
                 </div>
 
                 <Link
