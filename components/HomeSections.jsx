@@ -2,270 +2,425 @@ import Link from 'next/link';
 import {
   ArrowRight,
   BadgePercent,
-  Check,
+  CalendarCheck,
+  Camera,
+  Clock3,
   Droplets,
   HeartHandshake,
   KeyRound,
   MapPin,
+  MessageCircle,
   ShieldCheck,
-  Truck,
+  Sparkles,
   Video,
   Zap,
+  Truck,
+  Check,
 } from 'lucide-react';
 import FeaturedCarousel from './FeaturedCarousel';
+import WashMotionDivider from './WashMotionDivider';
 import PrimaryServiceAnimation from './PrimaryServiceAnimation';
-import { VEHICLE_CARE_PRICE, priceForPackage } from '../lib/pricing';
+import { HEAVY_VEHICLE_PRICE, VEHICLE_CARE_PRICE, priceForPackage } from '../lib/pricing';
 
 export default function HomeSections() {
   return (
-    <main className="ah-home">
-      {/* Immersive hero: image and copy are one composition, not two separate blocks */}
-      <section
-        id="home"
-        className="ah-hero"
-        style={{
-          backgroundImage:
-            "linear-gradient(90deg, rgba(8,35,34,.97) 0%, rgba(8,35,34,.88) 34%, rgba(8,35,34,.46) 64%, rgba(8,35,34,.18) 100%), url('/gallery/wash_photo.webp')",
-        }}
-      >
-        <div className="ah-hero-inner">
-          <div className="ah-hero-copy">
-            <span className="font-label ah-eyebrow">
+    <>
+      <section id="home" className="home-hero">
+        <div className="mx-auto grid max-w-6xl items-center gap-10 px-5 py-16 md:grid-cols-[1.05fr_.95fr] md:py-24">
+          <div>
+            <span className="font-label text-xs text-[var(--gold-400)]">
               DOORSTEP VEHICLE CARE · KURAVILANGADU
             </span>
 
-            <h1 className="font-display ah-hero-title">
-              Care for your car,
-              <br />
-              even when life
-              <br />
-              keeps you away.
+            <h1 className="font-display mt-4 text-4xl leading-tight text-[var(--cream-50)] sm:text-5xl md:text-6xl">
+              Care for your car, even when life keeps you away.
             </h1>
 
-            <p className="font-body ah-hero-text">
+            <p className="font-body mt-5 max-w-xl text-base leading-7 text-[var(--teal-100)] md:text-lg">
               From a complete doorstep wash to a thoughtful vehicle-care visit,
               Aqua Haul keeps your car clean, checked and looked after at home.
             </p>
 
-            <div className="ah-hero-actions">
+            <div className="mt-8 flex flex-wrap gap-3">
               <Link href="/book" className="btn-primary inline-flex items-center gap-2">
                 Book your care <ArrowRight size={18} />
               </Link>
-              <Link href="/services" className="ah-outline-button">
+              <Link href="/services" className="btn-outline inline-flex items-center">
                 Explore services
               </Link>
             </div>
 
-            <div className="ah-trust-strip">
-              <span><Droplets size={15} /> Own water</span>
-              <span><Zap size={15} /> Own power</span>
-              <span><ShieldCheck size={15} /> Professional care</span>
+            <div className="mt-7 flex flex-wrap gap-3 text-sm text-[var(--teal-100)]">
+              <span className="hero-pill"><Droplets size={15} /> Own water</span>
+              <span className="hero-pill"><Zap size={15} /> Own power</span>
+              <span className="hero-pill"><ShieldCheck size={15} /> Professional care</span>
             </div>
+          </div>
+
+          <div className="home-hero-media">
+            <div className="home-hero-badge">
+              <Droplets size={18} /> Own water
+              <span>+</span>
+              <Zap size={18} /> Own power
+            </div>
+            <img
+              src="/gallery/wash_photo.webp"
+              alt="Aqua Haul team providing a doorstep car wash beside the mobile service vehicle"
+            />
           </div>
         </div>
       </section>
 
-      {/* Main services directly continue from the hero */}
-      <section className="ah-dark-section ah-service-stage">
-        <div className="ah-container">
-          <div className="ah-service-grid">
-            <article className="ah-service-card ah-service-card-light">
-              <div className="ah-service-copy">
-                <div className="ah-service-heading">
-                  <span className="ah-service-icon"><Droplets size={22} /></span>
-                  <span className="font-label">COMPLETE CARE WASH</span>
-                </div>
+      <section className="home-section bg-[var(--cream-50)] px-4 py-14 sm:px-6 md:py-20">
+        <div className="mx-auto grid max-w-6xl gap-4 md:grid-cols-3">
+          <Quick
+            href="/book"
+            icon={CalendarCheck}
+            title="Book Your Care"
+            text="Choose a service, location and an available slot."
+          />
+          <Quick
+            href="/services"
+            icon={Sparkles}
+            title="Explore Services"
+            text="See washes, vehicle care and condition-based extras."
+          />
+          <Quick
+            href="/gallery"
+            icon={Camera}
+            title="See Our Work"
+            text="Browse real photos and videos from recent jobs."
+          />
+        </div>
+      </section>
 
-                <h2 className="font-display">A full refresh, right where you park.</h2>
+      <section className="home-section bg-[var(--cream-100)] px-4 py-16 sm:px-6 md:py-24">
+        <div className="mx-auto max-w-6xl">
+          <div className="mx-auto max-w-2xl text-center">
+            <span className="font-label text-xs text-[var(--terracotta-600)]">
+              THREE WAYS WE CARE
+            </span>
+            <h2 className="font-display mt-3 text-3xl text-[var(--teal-900)] md:text-5xl">
+              From everyday cars to heavy vehicles — care that comes to you.
+            </h2>
+            <p className="font-body mt-3 text-[var(--ink-muted)]">
+              Choose a complete doorstep wash, book a fixed-price heavy vehicle wash, or let us look after a car that has been sitting unused while you are away.
+            </p>
+          </div>
 
+          <div className="mt-10 grid gap-5 lg:grid-cols-2 xl:grid-cols-3">
+            <div className="primary-service-card primary-service-card-with-scene">
+              <div className="primary-service-content">
+                <div className="primary-service-icon"><Droplets size={26} /></div>
+                <span className="font-label text-[10px] text-[var(--terracotta-600)]">
+                  COMPLETE CARE WASH
+                </span>
+                <h3 className="font-display mt-2 text-3xl text-[var(--teal-900)]">
+                  A full refresh, right where you park.
+                </h3>
                 <p>
                   Foam Wash and Interior Detailing brought to your doorstep
                   with our own water, power and equipment.
                 </p>
 
-                <div className="ah-price-pills">
+                <div className="service-price-row">
                   <span>5-Seater <b>₹{priceForPackage('5-Seater')}</b></span>
                   <span>7-Seater <b>₹{priceForPackage('7-Seater')}</b></span>
                 </div>
 
                 <Link
                   href="/book?service=complete"
-                  className="btn-primary ah-service-cta inline-flex items-center gap-2"
+                  className="btn-primary mt-6 inline-flex items-center gap-2"
                 >
                   Book a wash <ArrowRight size={17} />
                 </Link>
               </div>
 
               <PrimaryServiceAnimation variant="wash" />
-            </article>
+            </div>
 
-            <article className="ah-service-card ah-service-card-dark">
-              <div className="ah-service-copy">
-                <div className="ah-service-heading">
-                  <span className="ah-service-icon"><KeyRound size={22} /></span>
-                  <span className="font-label">VEHICLE CARE VISIT</span>
-                </div>
-
-                <h2 className="font-display">Away from home? We’ll check in on your car.</h2>
-
+            <div className="primary-service-card care primary-service-card-with-scene">
+              <div className="primary-service-content">
+                <div className="primary-service-icon"><KeyRound size={26} /></div>
+                <span className="font-label text-[10px] text-[var(--gold-400)]">
+                  VEHICLE CARE VISIT
+                </span>
+                <h3 className="font-display mt-2 text-3xl">
+                  Away from home? We’ll check in on your car.
+                </h3>
                 <p>
-                  We visually check the vehicle, start it, take it for a short
-                  run or drive up to 5 km where safe and permitted, complete
-                  the wash, then send you a photo/video update.
+                  Ideal for vehicles left unused for weeks or months. We visually
+                  check it, start it, take it for a short run/drive up to 5 km
+                  where safe and permitted, complete the wash, then send you a
+                  photo/video update.
                 </p>
 
-                <strong className="font-display ah-care-price">
+                <strong className="font-display mt-5 block text-4xl">
                   ₹{VEHICLE_CARE_PRICE}
                 </strong>
 
                 <Link
                   href="/book?service=vehicle-care"
-                  className="btn-primary ah-service-cta inline-flex items-center gap-2"
+                  className="btn-primary mt-6 inline-flex items-center gap-2"
                 >
                   Book vehicle care <ArrowRight size={17} />
                 </Link>
               </div>
 
               <PrimaryServiceAnimation variant="care" />
-            </article>
-          </div>
-
-          <p className="ah-care-note">
-            <strong>Vehicle Care Visit:</strong> the short drive is carried out
-            only with owner permission and when the vehicle appears safe and
-            legally permitted to be driven.
-          </p>
-        </div>
-      </section>
-
-      {/* Team story */}
-      <section className="ah-dark-section">
-        <div className="ah-container">
-          <article className="ah-story-card">
-            <div className="ah-story-copy">
-              <span className="font-label ah-story-label">MEET AQUA HAUL</span>
-              <h2 className="font-display">
-                Built locally.
-                <br />
-                Made to make
-                <br />
-                car care easier.
-              </h2>
-
-              <p>
-                Aqua Haul started with a simple idea — car care shouldn’t mean
-                waiting at a wash centre or rearranging your day. Based in
-                Kuravilangadu, we bring the wash to you with our own water,
-                power and equipment.
-              </p>
-
-              <p>
-                From everyday washes to looking after a vehicle while its owner
-                is away, we treat every car with the same care we’d give our own.
-              </p>
-
-              <strong>You park it. We take care of the rest.</strong>
             </div>
 
-            <div className="ah-story-image">
-              <img
-                src="/gallery/team.webp"
-                alt="Aqua Haul team standing beside the mobile service vehicle"
-              />
-            </div>
-          </article>
-        </div>
-      </section>
-
-      {/* Equipment strip */}
-      <section className="ah-dark-section">
-        <div className="ah-container">
-          <article className="ah-equipment-card">
-            <div className="ah-equipment-image">
-              <img
-                src="/gallery/truck.webp"
-                alt="Aqua Haul mobile service truck"
-              />
-            </div>
-
-            <div className="ah-equipment-copy">
-              <span className="font-label">FULLY EQUIPPED. WHEREVER YOU ARE.</span>
-              <h2 className="font-display">
-                We bring everything needed for a proper wash.
-              </h2>
-
-              <div className="ah-equipment-list">
-                <Feature icon={Droplets} text="Own water supply" />
-                <Feature icon={Zap} text="Own power supply" />
-                <Feature icon={Truck} text="Mobile equipment" />
-                <Feature icon={Check} text="Doorstep ready" />
+            <div className="primary-service-card primary-service-card-with-scene">
+              <div className="primary-service-content">
+                <div className="primary-service-icon"><Truck size={26} /></div>
+                <span className="font-label text-[10px] text-[var(--terracotta-600)]">
+                  HEAVY VEHICLE COMPLETE WASH
+                </span>
+                <h3 className="font-display mt-2 text-3xl text-[var(--teal-900)]">
+                  Bigger vehicle. Same doorstep convenience.
+                </h3>
+                <p>
+                  A complete wash for trucks, buses and other heavy vehicles,
+                  brought to your location with our own water, power and equipment.
+                </p>
+                <strong className="font-display mt-5 block text-4xl text-[var(--teal-900)]">
+                  ₹{HEAVY_VEHICLE_PRICE}
+                </strong>
+                <p className="mt-2 text-sm">Fixed complete-wash price. Add-ons are separate where applicable.</p>
+                <Link href="/book?vehicle=Heavy%20Vehicle&service=heavy" className="btn-primary mt-6 inline-flex items-center gap-2">
+                  Book heavy vehicle wash <ArrowRight size={17} />
+                </Link>
               </div>
             </div>
-          </article>
-        </div>
-      </section>
+          </div>
 
-      {/* Existing real-work carousel, visually contained instead of floating on white */}
-      <section className="ah-dark-section ah-gallery-stage">
-        <div className="ah-container">
-          <div className="ah-gallery-shell">
-            <FeaturedCarousel />
+          <div className="mt-5 rounded-3xl border border-[var(--teal-100)] bg-white p-5 text-sm text-[var(--ink-muted)]">
+            <strong className="text-[var(--teal-900)]">Vehicle Care Visit:</strong>{' '}
+            the short drive is only carried out with owner permission and when
+            the vehicle appears safe and legally permitted to be driven. We’ll
+            contact you first if anything needs attention.
           </div>
         </div>
       </section>
 
-      {/* Group offer */}
-      <section className="ah-dark-section ah-offer-stage">
-        <div className="ah-container">
-          <article className="ah-offer-card">
-            <div className="ah-offer-icon"><BadgePercent size={24} /></div>
-            <div className="ah-offer-copy">
-              <span className="font-label">FAMILY & FRIENDS OFFER</span>
-              <h2 className="font-display">Three cars. One visit. More value for everyone.</h2>
-              <p>
+      <WashMotionDivider label="Wash. Care. Reassure." />
+
+      <section className="home-section bg-[var(--cream-100)] px-4 pb-16 sm:px-6 md:pb-24">
+        <div className="mx-auto max-w-6xl">
+          <div className="offer-card">
+            <span className="offer-icon"><BadgePercent size={24} /></span>
+            <div>
+              <span className="font-label text-[10px] text-[var(--gold-400)]">
+                FAMILY & FRIENDS OFFER
+              </span>
+              <h2 className="font-display mt-1 text-2xl md:text-3xl">
+                Three cars. One visit. More value for everyone.
+              </h2>
+              <p className="font-body mt-2 max-w-3xl text-sm leading-6 text-[var(--teal-100)]">
                 Bring together 3 or more family or friends’ cars at the same
-                location—or within 3 km—and qualify for 20–30% off. Final
-                savings are confirmed after we review the vehicles and services.
+                location—or within 3 km—and qualify for 20–30% off. The final
+                saving is confirmed after we review the vehicles and selected
+                services.
               </p>
             </div>
-
             <Link
               href="/book?vehicles=3&offer=group&service=complete"
-              className="btn-primary ah-offer-button inline-flex items-center gap-2"
+              className="offer-link"
             >
               Book 3 cars & save <ArrowRight size={17} />
             </Link>
-          </article>
+          </div>
         </div>
       </section>
 
-      {/* Compact service-area CTA */}
-      <section className="ah-final-cta">
-        <div className="ah-container ah-final-cta-inner">
+      {/* Real team story */}
+      <section className="home-section bg-white px-4 py-16 sm:px-6 md:py-24">
+        <div className="mx-auto grid max-w-6xl items-center gap-8 overflow-hidden rounded-[2rem] border border-[var(--teal-100)] bg-[var(--cream-50)] p-5 shadow-sm md:grid-cols-[.9fr_1.1fr] md:p-8">
+          <div className="px-2 py-3 md:px-4">
+            <span className="font-label text-xs text-[var(--terracotta-600)]">
+              MEET AQUA HAUL
+            </span>
+            <h2 className="font-display mt-3 text-3xl leading-tight text-[var(--teal-900)] md:text-5xl">
+              Built locally. Made to make car care easier.
+            </h2>
+            <p className="font-body mt-5 leading-7 text-[var(--ink-muted)]">
+              Aqua Haul started with a simple idea — car care shouldn’t mean
+              waiting at a wash centre or rearranging your day. Based in
+              Kuravilangadu, we bring the wash to you with our own water, power
+              and equipment.
+            </p>
+            <p className="font-body mt-4 leading-7 text-[var(--ink-muted)]">
+              From everyday washes to looking after a vehicle while its owner is
+              away, we treat every car with the same care we’d give our own.
+            </p>
+            <p className="mt-5 font-bold text-[var(--terracotta-600)]">
+              You park it. We take care of the rest.
+            </p>
+          </div>
+
+          <div className="overflow-hidden rounded-[1.6rem] bg-[var(--teal-900)]">
+            <img
+              src="/gallery/team.webp"
+              alt="Aqua Haul team standing with the mobile service vehicle"
+              className="h-full min-h-[280px] w-full object-cover"
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* Equipment / mobile setup */}
+      <section className="home-section bg-[var(--teal-900)] px-4 py-16 sm:px-6 md:py-20">
+        <div className="mx-auto grid max-w-6xl items-center gap-8 md:grid-cols-[1.05fr_.95fr]">
+          <div className="overflow-hidden rounded-[2rem] border border-white/10">
+            <img
+              src="/gallery/truck.webp"
+              alt="Aqua Haul mobile service vehicle ready for doorstep car care"
+              className="h-full min-h-[280px] w-full object-cover"
+            />
+          </div>
+
           <div>
-            <span className="font-label">READY WHEN YOUR CAR IS</span>
-            <h2 className="font-display">
-              Clean when you’re home. Looked after when you’re away.
+            <span className="font-label text-xs text-[var(--gold-400)]">
+              OUR WATER. OUR POWER. YOUR DOORSTEP.
+            </span>
+            <h2 className="font-display mt-3 text-3xl leading-tight text-white md:text-5xl">
+              Your car. Your doorstep. Our water. Our power.
+            </h2>
+            <p className="font-body mt-4 max-w-xl leading-7 text-[var(--teal-100)]">
+              Aqua Haul arrives ready to work. We carry our own water, power and professional equipment, so you don’t need to arrange a tap, hose or electrical connection.
+            </p>
+
+            <div className="mt-6 rounded-2xl border border-[var(--gold-400)]/30 bg-white/5 px-5 py-4">
+              <p className="text-lg font-bold leading-8 text-white md:text-xl" lang="ml">
+                വെള്ളം വേണ്ട, കറന്റ് വേണ്ട — Aqua Haul വന്നാൽ മതി! 💧⚡
+              </p>
+            </div>
+
+            <div className="mt-7 grid gap-3 sm:grid-cols-2">
+              <Equipment icon={Droplets} text="Own water supply" />
+              <Equipment icon={Zap} text="Own power supply" />
+              <Equipment icon={Truck} text="Mobile equipment setup" />
+              <Equipment icon={Check} text="Ready for doorstep service" />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <FeaturedCarousel />
+
+      <section className="home-section bg-white px-4 py-16 sm:px-6 md:py-24">
+        <div className="mx-auto max-w-6xl">
+          <div className="text-center">
+            <span className="font-label text-xs text-[var(--terracotta-600)]">
+              HOW IT WORKS
+            </span>
+            <h2 className="font-display mt-3 text-3xl text-[var(--teal-900)] md:text-5xl">
+              Car care without the detour.
             </h2>
           </div>
 
-          <div className="ah-final-actions">
-            <span><MapPin size={17} /> Kuravilangadu + nearby areas</span>
-            <Link href="/book" className="btn-primary inline-flex items-center gap-2">
-              Book Aqua Haul <ArrowRight size={17} />
+          <div className="mt-10 grid gap-4 md:grid-cols-4">
+            {[
+              'Choose the care you need',
+              'Share your exact location',
+              'Pick an available time',
+              'We come to your doorstep',
+            ].map((text, index) => (
+              <div key={text} className="process-card">
+                <span>{index + 1}</span>
+                <h3>{text}</h3>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <WashMotionDivider label="A little foam between the details" />
+
+      <section className="home-section bg-[var(--cream-50)] px-4 py-16 sm:px-6 md:py-24">
+        <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-2">
+          <div>
+            <span className="font-label text-xs text-[var(--terracotta-600)]">
+              WHY AQUA HAUL
+            </span>
+            <h2 className="font-display mt-3 text-3xl text-[var(--teal-900)] md:text-5xl">
+              Thoughtful service, right at your doorstep.
+            </h2>
+
+            <div className="mt-7 grid gap-3 sm:grid-cols-2">
+              <Trust icon={Droplets} text="Own water and equipment" />
+              <Trust icon={ShieldCheck} text="Clear estimates before work" />
+              <Trust icon={MapPin} text="Route-aware scheduling" />
+              <Trust icon={Video} text="Photo/video care updates" />
+            </div>
+          </div>
+
+          <div className="service-area-card">
+            <MapPin size={32} />
+            <h3 className="font-display mt-4 text-3xl">
+              Serving Kuravilangadu and nearby areas
+            </h3>
+            <p className="font-body mt-3 leading-7 text-[var(--teal-100)]">
+              Share your map location during booking and we’ll check availability
+              within our normal service area of approximately 20 km.
+            </p>
+            <Link
+              href="/book"
+              className="mt-6 inline-flex items-center gap-2 font-bold text-[var(--gold-400)]"
+            >
+              Check your location <ArrowRight size={17} />
             </Link>
           </div>
         </div>
       </section>
-    </main>
+
+      <section className="home-cta px-4 py-16 sm:px-6 md:py-20">
+        <div className="mx-auto max-w-4xl text-center">
+          <HeartHandshake className="mx-auto text-[var(--gold-400)]" size={36} />
+          <h2 className="font-display mt-4 text-3xl text-white md:text-5xl">
+            Clean when you’re home. Looked after when you’re away.
+          </h2>
+          <p className="font-body mx-auto mt-3 max-w-2xl text-[var(--teal-100)]">
+            Tell us what your vehicle needs and we’ll help you choose the right care.
+          </p>
+          <Link href="/book" className="btn-primary mt-7 inline-flex items-center gap-2">
+            Book Aqua Haul <ArrowRight size={18} />
+          </Link>
+        </div>
+      </section>
+    </>
   );
 }
 
-function Feature({ icon: Icon, text }) {
+function Quick({ href, icon: Icon, title, text }) {
   return (
-    <div className="ah-feature">
-      <span><Icon size={18} /></span>
-      <strong>{text}</strong>
+    <Link href={href} className="quick-card">
+      <span><Icon size={23} /></span>
+      <div>
+        <h2>{title}</h2>
+        <p>{text}</p>
+      </div>
+      <ArrowRight className="ml-auto" size={19} />
+    </Link>
+  );
+}
+
+function Trust({ icon: Icon, text }) {
+  return (
+    <div className="trust-card">
+      <Icon size={21} />
+      <span>{text}</span>
+    </div>
+  );
+}
+
+function Equipment({ icon: Icon, text }) {
+  return (
+    <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 p-4 text-[var(--teal-100)]">
+      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[var(--teal-700)] text-[var(--gold-400)]">
+        <Icon size={20} />
+      </span>
+      <strong className="text-sm">{text}</strong>
     </div>
   );
 }
