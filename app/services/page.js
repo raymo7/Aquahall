@@ -5,7 +5,7 @@ export const metadata = { title: 'Services & Pricing | Aqua Haul' };
 
 export default function ServicesPage() {
   return (
-    <PageShell>
+    <PageShell hideFooter>
       <PricingSection />
     </PageShell>
   );
