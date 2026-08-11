@@ -1,6 +1,6 @@
 import './globals.css';
 import './home-blend.css';
-import WaterInteraction from '../components/WaterInteraction';
+import DeferredWaterInteraction from '../components/DeferredWaterInteraction';
 
 export const metadata = {
   title: 'Aqua Haul — Mobile Car Wash in Kottayam',
@@ -10,7 +10,10 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body>{children}<WaterInteraction /></body>
+      <body>
+        {children}
+        <DeferredWaterInteraction />
+      </body>
     </html>
   );
 }
