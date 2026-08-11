@@ -1,5 +1,3 @@
-'use client';
-
 export default function PrimaryServiceAnimation({ variant = 'wash' }) {
   const isCare = variant === 'care';
 
@@ -37,92 +35,61 @@ export default function PrimaryServiceAnimation({ variant = 'wash' }) {
           <path d="M454 175 H475" className="scene-headlight" />
         </g>
 
-        {/* Cab is on the LEFT, so the illustrated truck faces left.
-            It now enters from the RIGHT and drives leftwards — no reversing. */}
-        <g className="scene-service-truck">
-          <rect x="188" y="111" width="116" height="76" rx="6" className="truck-box" />
-          <path d="M149 142 L166 115 H207 V187 H139 V162 C139 151 143 146 149 142Z" className="truck-cab" />
-          <path d="M163 126 H195 V149 H151 Z" className="truck-window" />
-          <rect x="212" y="124" width="72" height="42" rx="8" className="truck-brand-panel" />
-          <text x="248" y="143" textAnchor="middle" className="truck-brand">AQUA</text>
-          <text x="248" y="158" textAnchor="middle" className="truck-brand-small">HAUL</text>
-          <circle cx="165" cy="188" r="17" className="scene-wheel" />
-          <circle cx="273" cy="188" r="17" className="scene-wheel" />
-          <circle cx="165" cy="188" r="6" className="scene-hub" />
-          <circle cx="273" cy="188" r="6" className="scene-hub" />
+        <g className="scene-truck">
+          <rect x="182" y="137" width="93" height="57" rx="6" className="truck-box" />
+          <path d="M145 194 V159 L166 137 H202 V194 Z" className="truck-cab" />
+          <path d="M158 158 L171 143 H190 V163 H158 Z" className="truck-window" />
+          <rect x="211" y="149" width="52" height="33" rx="5" className="truck-brand" />
+          <text x="237" y="163" textAnchor="middle" className="truck-brand-text">AQUA</text>
+          <text x="237" y="175" textAnchor="middle" className="truck-brand-text">HAUL</text>
+          <circle cx="166" cy="196" r="17" className="scene-wheel" />
+          <circle cx="252" cy="196" r="17" className="scene-wheel" />
+          <circle cx="166" cy="196" r="6" className="scene-hub" />
+          <circle cx="252" cy="196" r="6" className="scene-hub" />
         </g>
 
         {!isCare && (
           <>
-            <g className="wash-foam-phase">
-              <path d="M303 144 C325 124 343 121 363 121" className="wash-hose" />
-              <path d="M363 121 C390 117 418 123 447 139" className="wash-spray" />
-              <circle cx="397" cy="122" r="7" className="foam-bubble" />
-              <circle cx="418" cy="132" r="10" className="foam-bubble" />
-              <circle cx="440" cy="144" r="6" className="foam-bubble" />
-              <circle cx="369" cy="137" r="5" className="foam-bubble" />
+            <path d="M276 158 C300 132 323 126 348 126" className="wash-hose" />
+            <path d="M344 124 C367 117 390 119 414 127" className="wash-spray" />
+            <g className="wash-foam">
+              <circle cx="373" cy="129" r="7" />
+              <circle cx="389" cy="126" r="8" />
+              <circle cx="406" cy="130" r="7" />
+              <circle cx="421" cy="136" r="6" />
             </g>
-
-            <g className="wash-brush-phase">
-              <path d="M318 161 C340 151 364 148 389 150" className="wash-brush-line" />
-            </g>
-
-            <g className="wash-rinse-phase">
-              <path d="M307 132 C350 112 408 112 465 150" className="rinse-stream" />
-              <circle cx="432" cy="151" r="5" className="rinse-drop" />
-              <circle cx="452" cy="160" r="4" className="rinse-drop" />
-            </g>
-
-            <g className="wash-shine-phase">
-              <path d="M402 126 L408 139 L421 145 L408 151 L402 164 L396 151 L383 145 L396 139 Z" className="shine-star" />
-              <path d="M442 137 L446 145 L454 149 L446 153 L442 161 L438 153 L430 149 L438 145 Z" className="shine-star small" />
+            <g className="wash-brush-art">
+              <rect x="346" y="151" width="57" height="13" rx="6" className="brush-head" />
+              <path d="M374 151 L391 133" className="brush-handle" />
+              <path d="M353 164 V176 M362 164 V176 M371 164 V176 M380 164 V176 M389 164 V176 M398 164 V176" className="brush-bristles" />
             </g>
           </>
         )}
 
         {isCare && (
           <>
-            <g className="care-check-phase">
-              <circle cx="386" cy="104" r="32" className="care-status-ring" />
-              <path d="M375 104 L383 112 L399 94" className="care-check" />
-            </g>
-
-            <g className="care-start-phase">
-              <path d="M446 174 H474" className="care-headlight-pulse" />
-              <path d="M356 126 C369 117 388 117 402 126" className="care-start-wave" />
-            </g>
-
-            <g className="care-drive-phase">
-              <path d="M458 115 C478 115 493 130 493 149" className="care-route" />
-              <path d="M490 143 L494 151 L501 143" className="care-route-tip" />
-            </g>
-
-            <g className="care-wash-phase">
-              <circle cx="397" cy="135" r="8" className="care-foam" />
-              <circle cx="421" cy="142" r="11" className="care-foam" />
-              <circle cx="445" cy="151" r="7" className="care-foam" />
-            </g>
-
-            <g className="care-update-phase">
-              <rect x="451" y="73" width="43" height="27" rx="7" className="care-phone" />
-              <circle cx="472" cy="86" r="5" className="care-camera-dot" />
+            <path d="M282 214 C320 233 394 235 468 216" className="care-route" />
+            <path d="M461 209 L470 216 L461 223" className="care-route-tip" />
+            <g className="care-phone">
+              <rect x="419" y="105" width="45" height="61" rx="8" />
+              <circle cx="442" cy="151" r="4" className="care-camera-dot" />
             </g>
           </>
         )}
 
-        <path d="M12 227 H542" className="scene-road" />
+        <path d="M20 227 H520" className="scene-road" />
       </svg>
 
       <div className="scene-bubbles">
         <i /><i /><i /><i /><i />
       </div>
 
-      <div className="scene-caption">
+      <p className="scene-caption">
         <span className="scene-caption-dot" />
         {isCare
-          ? 'Arrive · Check · Start · Short run · Wash · Update'
-          : 'Arrive · Foam · Scrub · Rinse · Shine'}
-      </div>
+          ? 'Check · Start · Short run · Wash · Update'
+          : 'We arrive · Foam · Scrub · Rinse · Shine'}
+      </p>
     </div>
   );
 }
