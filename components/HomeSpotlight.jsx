@@ -24,8 +24,8 @@ const SLIDES = [
     id: 'group',
     image: '/gallery/team.webp',
     eyebrow: 'FAMILY & FRIENDS OFFER',
-    title: '3 or more vehicles? Save 20–30%.',
-    text: 'Same location or within 3 km. Final saving is confirmed after reviewing the vehicle mix.',
+    title: '3 cars at one location? Save 10%.',
+    text: 'Book 3 or more cars at the same location and get 10% off the Complete Care wash subtotal.',
   },
 ];
 
@@ -72,7 +72,7 @@ export default function HomeSpotlight() {
             </div>
           )}
 
-          {slide.id === 'group' && <div className="mt-6"><Link href="/book?vehicles=3&offer=group&service=complete" className="hero-book-spark btn-primary inline-flex items-center gap-2"><Users size={18}/> Book 3 vehicles & save <ArrowRight size={17}/></Link></div>}
+          {slide.id === 'group' && <div className="mt-6"><Link href="/book?vehicles=3&offer=group&service=complete" className="hero-book-spark btn-primary inline-flex items-center gap-2"><Users size={18}/> Book 3 cars & save <ArrowRight size={17}/></Link></div>}
 
           <div className="mt-7 flex items-center gap-2" aria-label="Homepage highlights">
             {SLIDES.map((item, itemIndex) => <button key={item.id} type="button" onClick={()=>setIndex(itemIndex)} className={`h-2 rounded-full transition-all ${itemIndex===index?'w-8 bg-[var(--gold-400)]':'w-2 bg-white/45'}`} aria-label={`Show ${item.eyebrow}`} />)}

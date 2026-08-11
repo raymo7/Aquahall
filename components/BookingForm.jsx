@@ -93,7 +93,7 @@ function bookingWhatsApp(booking, paid = false) {
     booking.email ? `Email: ${booking.email}` : null,
     `Vehicles: ${booking.vehicle_count || 1}${Array.isArray(booking.vehicles) && booking.vehicles.length ? ` · ${booking.vehicles.map((v, i) => `#${i + 1} ${v.type}${v.model ? ` (${v.model})` : ''}`).join(' · ')}` : ` · ${booking.vehicle_type}${booking.vehicle_model ? ` (${booking.vehicle_model})` : ''}`}`,
     `Service: ${booking.service_type === 'vehicle-care' ? 'Vehicle Care Visit' : booking.package_id ? 'Complete Care Wash' : 'Heavy Vehicle Wash'}`,
-    booking.group_offer ? `Group offer: Eligible for 20–30% · ${booking.group_location_mode === 'within-3km' ? 'locations within 3 km' : 'same location'}` : null,
+    booking.group_offer ? `Group offer: 10% off Complete Care Wash · same location` : null,
     `Add-ons: ${(booking.alacarte || []).length ? booking.alacarte.map(serviceName).join(', ') : 'None'}`,
     `Date: ${formatDate(booking.booking_date)}`,
     `Time: ${booking.booking_time}`,
@@ -136,7 +136,7 @@ function enquiryWhatsApp({ form, resolved, distance, requestedSlot }) {
     form.name ? `Name: ${form.name}` : null,
     form.phone ? `Phone: ${form.phone}` : null,
     `Vehicles: ${form.vehicleCount} · ${form.vehicles.map((v, i) => `#${i + 1} ${v.type}${v.model ? ` (${v.model})` : ''}`).join(' · ')}`,
-    form.groupOffer ? `Group offer: 20–30% eligible · ${form.groupLocationMode === 'within-3km' ? 'within 3 km' : 'same location'}` : null,
+    form.groupOffer ? `Group offer: 10% off Complete Care Wash · same location` : null,
     `Service: ${service}`,
     `Add-ons: ${form.alacarte.length ? form.alacarte.map(serviceName).join(', ') : 'None'}`,
     form.date ? `Preferred date: ${formatDate(form.date)}` : null,
@@ -224,8 +224,9 @@ export default function BookingForm() {
         : [{ type: form.vehicleType || '5-Seater', model: form.vehicleModel || '' }],
       serviceType: form.serviceType,
       alacarte: form.alacarte,
+      groupOffer: form.groupOffer,
     }),
-    [form.vehicleType, form.vehicleModel, form.vehicles, form.serviceType, form.alacarte],
+    [form.vehicleType, form.vehicleModel, form.vehicles, form.serviceType, form.alacarte, form.groupOffer],
   );
   const extras = CORE_SERVICES.filter((service) => service.selectable);
 
@@ -632,16 +633,23 @@ export default function BookingForm() {
                       {[1,2,3,4].map((count)=><button key={count} type="button" onClick={()=>setVehicleCount(count)} className={`vehicle-count ${form.vehicleCount===count?'active':''}`}>{count}{count===4?'+':''}</button>)}
                     </div>
 
-                    {form.vehicleCount >= 3 && (
-                      <div className="booking-offer mt-4">
-                        <strong>🎉 3+ vehicle offer unlocked</strong>
-                        <p>Eligible for 20–30% off at the same location or within 3 km. Final saving is confirmed after review.</p>
-                        <div className="mt-2 flex flex-wrap gap-2">
-                          <button type="button" onClick={()=>update('groupLocationMode','same')} className={`chip ${form.groupLocationMode==='same'?'active':''}`}>Same location</button>
-                          <button type="button" onClick={()=>update('groupLocationMode','within-3km')} className={`chip ${form.groupLocationMode==='within-3km'?'active':''}`}>Within 3 km</button>
-                        </div>
-                      </div>
-                    )}
+                    <div className="booking-offer mt-4">
+                      <strong>
+                        {form.vehicleCount >= 3 && !hasHeavyVehicle
+                          ? '🎉 10% same-location discount applied'
+                          : '✨ Book 3 cars at the same location — get 10% off'}
+                      </strong>
+                      <p>
+                        {form.vehicleCount >= 3 && !hasHeavyVehicle
+                          ? `You save ₹${resolved.groupDiscount || 0} on the Complete Care Wash subtotal.`
+                          : 'Choose 3 or more cars in one booking at the same location. The 10% discount applies automatically to Complete Care Wash.'}
+                      </p>
+                      {hasHeavyVehicle && form.vehicleCount >= 3 && (
+                        <p className="mt-1 font-bold">
+                          The 3-car promotion is for car bookings only; heavy vehicles keep their listed price.
+                        </p>
+                      )}
+                    </div>
 
                     <div className="mt-5 space-y-3">
                       {form.vehicles.map((vehicle,index)=>(
@@ -691,7 +699,7 @@ export default function BookingForm() {
                         <span className="service-choice-icon"><Car size={24}/></span>
                         <span className="font-label text-[9px]">{allHeavyVehicles ? 'HEAVY VEHICLE WASH' : 'COMPLETE CARE WASH'}</span>
                         <strong>{allHeavyVehicles ? 'Heavy vehicle cleaning at your location.' : 'A fresh start, inside and out.'}</strong>
-                        <small>{allHeavyVehicles ? 'Pricing is based on the selected heavy vehicle type.' : 'Foam Wash + Interior Detailing at your doorstep.'}</small>
+                        <small>{allHeavyVehicles ? 'Pricing is based on the selected heavy vehicle type.' : 'Foam Wash + Underbody Wash + Interior Detailing at your doorstep.'}</small>
                         <b>{multipleVehicles ? `Estimated base ₹${completeBaseTotal}` : `₹${completeBaseTotal}`}</b>
                         {multipleVehicles && <small className="selected-service-breakdown">{vehiclePriceBreakdown}</small>}
                         <button type="button" onClick={()=>bookService('complete')} className="btn-primary mt-4 flex w-full items-center justify-center gap-2">{allHeavyVehicles ? 'Book heavy wash' : 'Book complete care'} <ArrowRight size={16}/></button>
@@ -702,7 +710,7 @@ export default function BookingForm() {
                           <span className="service-choice-icon"><KeyRound size={24}/></span>
                           <span className="font-label text-[9px]">VEHICLE CARE VISIT</span>
                           <strong>Away from home? We’ll check in on your car.</strong>
-                          <small>Visual check, start-up, short run/drive where safe, wash + photo/video update.</small>
+                          <small>Visual check, start-up, short run/drive where safe, Complete Care Wash + photo/video update.</small>
                           <b>₹1000 per vehicle</b>
                           <button type="button" onClick={()=>bookService('vehicle-care')} className="btn-primary mt-4 flex w-full items-center justify-center gap-2">Book vehicle care <ArrowRight size={16}/></button>
                         </div>
@@ -804,7 +812,11 @@ export default function BookingForm() {
                       <Summary label="Service" value={allHeavyVehicles ? 'Heavy Vehicle Wash' : form.serviceType === 'vehicle-care' ? 'Vehicle Care Visit' : hasHeavyVehicle ? 'Complete Care + Heavy Vehicle Wash' : 'Complete Care Wash'} />
                       <Summary label="Extras" value={form.alacarte.length ? form.alacarte.map(serviceName).join(', ') : 'None'} />
                       <Summary label="Slot" value={selectedSlot?.label || 'Not selected'} />
-                      <div className="mt-5 border-t border-white/15 pt-4"><span className="font-body text-xs text-[var(--teal-100)]">Estimated service total</span><strong className="font-display mt-1 block text-4xl">₹{resolved.amount}{resolved.variablePricing ? '+' : ''}</strong>{resolved.variablePricing && <p className="mt-1 text-xs text-[var(--teal-100)]">Condition-based extras will be confirmed before work.</p>}{form.groupOffer && <p className="mt-2 rounded-xl bg-white/10 p-2 text-xs">20–30% group saving eligible · final discount confirmed by Aqua Haul.</p>}</div>
+                      <div className="mt-5 border-t border-white/15 pt-4"><span className="font-body text-xs text-[var(--teal-100)]">Estimated service total</span><strong className="font-display mt-1 block text-4xl">₹{resolved.amount}{resolved.variablePricing ? '+' : ''}</strong>{resolved.variablePricing && <p className="mt-1 text-xs text-[var(--teal-100)]">Condition-based extras will be confirmed before work.</p>}{resolved.groupDiscount > 0 && (
+                        <p className="mt-2 rounded-xl bg-white/10 p-2 text-xs">
+                          3-car same-location discount: <strong>-₹{resolved.groupDiscount}</strong> (10% off wash subtotal)
+                        </p>
+                      )}</div>
                     </div>
 
                     <h3 className="font-display mt-5 text-xl text-[var(--teal-900)]">How would you like to reserve?</h3>
@@ -1105,7 +1117,7 @@ function Success({ booking, paid, onPaid, onReset }) {
             <div className="font-body mt-5 space-y-2 text-sm">
               <p><strong>{booking.name}</strong> · {booking.phone}</p>
               <p>{booking.vehicle_count || 1} vehicle{(booking.vehicle_count || 1) > 1 ? 's' : ''} · {Array.isArray(booking.vehicles) && booking.vehicles.length ? booking.vehicles.map((v)=>v.type).join(', ') : booking.vehicle_type}</p>
-              <p><strong>{booking.service_type === 'vehicle-care' ? 'Vehicle Care Visit' : booking.package_id ? 'Complete Care Wash' : 'Heavy Vehicle Wash'}</strong></p><p>{(booking.alacarte || []).length ? `Extras: ${(booking.alacarte || []).map(serviceName).join(', ')}` : 'No extras selected'}</p>{booking.group_offer && <p><strong>Group offer:</strong> 20–30% eligible</p>}
+              <p><strong>{booking.service_type === 'vehicle-care' ? 'Vehicle Care Visit' : booking.package_id ? 'Complete Care Wash' : 'Heavy Vehicle Wash'}</strong></p><p>{(booking.alacarte || []).length ? `Extras: ${(booking.alacarte || []).map(serviceName).join(', ')}` : 'No extras selected'}</p>{booking.group_offer && <p><strong>Group offer:</strong> 10% eligible</p>}
               <p>{formatDate(booking.booking_date)} · {booking.booking_time}</p>
               <p><strong>House:</strong> {booking.address}</p>
               {booking.map_address && <p><strong>Place:</strong> {booking.map_address}</p>}
