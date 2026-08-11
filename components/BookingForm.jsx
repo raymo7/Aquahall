@@ -13,6 +13,12 @@ import {
   MessageCircle,
   KeyRound,
   ShieldCheck,
+  Info,
+  Droplets,
+  Gauge,
+  Wind,
+  Waves,
+  Sparkles,
   Truck,
   Users,
 } from 'lucide-react';
@@ -28,7 +34,6 @@ import {
   resolveBooking,
 } from '../lib/pricing';
 import PaymentPanel from './PaymentPanel';
-import AddOnCard from './AddOnCard';
 import WashMotionDivider from './WashMotionDivider';
 import WaveDivider from './WaveDivider';
 
@@ -154,6 +159,7 @@ export default function BookingForm() {
 
   const [step, setStep] = useState(0);
   const [slideDirection, setSlideDirection] = useState('forward');
+  const [expandedExtra, setExpandedExtra] = useState(null);
   const [error, setError] = useState('');
   const [fieldErrors, setFieldErrors] = useState({});
   const [busy, setBusy] = useState(false);
@@ -739,9 +745,42 @@ export default function BookingForm() {
 
                   {form.serviceType === 'vehicle-care' && !hasHeavyVehicle && <div className="care-questions mt-6"><h4 className="font-display text-xl text-[var(--teal-900)]">A few details before we visit</h4><div className="mt-4 grid gap-4 sm:grid-cols-2"><Field label="Is the vehicle currently starting?"><select className="field" value={form.careStarting} onChange={(e)=>update('careStarting',e.target.value)}><option value="yes">Yes</option><option value="not-sure">Not sure</option><option value="no">No</option></select></Field><Field label="How long has it been unused?"><select className="field" value={form.unusedDuration} onChange={(e)=>update('unusedDuration',e.target.value)}><option value="less-than-1-month">Less than 1 month</option><option value="1-3-months">1–3 months</option><option value="3-plus-months">3+ months</option></select></Field></div><div className="mt-4"><Field label="Key handover / access instructions"><input className="field" value={form.keyInstructions} onChange={(e)=>update('keyInstructions',e.target.value)} placeholder="Who has the key, security/gate instructions, etc."/></Field></div><label className={`permission-card mt-4 ${fieldErrors.drivePermission?'error':''}`}><input type="checkbox" checked={form.drivePermission} onChange={(e)=>update('drivePermission',e.target.checked)}/><span><strong>I authorise Aqua Haul to take the vehicle for a short run/drive of up to 5 km.</strong><small>Only where the vehicle appears safe and legally permitted to be driven. Aqua Haul will contact me if there is any concern before proceeding.</small></span></label>{fieldErrors.drivePermission&&<p className="font-body mt-2 text-xs font-bold text-[var(--terracotta-600)]">{fieldErrors.drivePermission}</p>}</div>}
 
-                  <div className="mt-8 flex items-end justify-between gap-3"><div><span className="font-label text-[10px] text-[var(--terracotta-600)]">OPTIONAL EXTRAS</span><h4 className="font-display mt-1 text-xl text-[var(--teal-900)]">Finishing touches, priced fairly.</h4></div></div>
-                  <p className="font-body mt-2 text-sm text-[var(--ink-muted)]">Some services depend on dirt, stains or affected area. We’ll confirm any condition-based price before starting.</p>
-                  <div className="mt-4 grid gap-3 md:grid-cols-2">{extras.map((service)=><AddOnCard key={service.id} service={service} selected={form.alacarte.includes(service.id)} onClick={()=>toggle(service.id)}/>)}</div>
+                  <div className="mt-8">
+                    <span className="font-label text-[10px] text-[var(--terracotta-600)]">OPTIONAL EXTRAS</span>
+                    <h4 className="font-display mt-1 text-xl text-[var(--teal-900)]">Choose only what your vehicle needs.</h4>
+                    <p className="font-body mt-2 text-sm leading-6 text-[var(--ink-muted)]">
+                      Tap a row to select it. Tap the <strong>ⓘ</strong> button to read more without changing your selection.
+                    </p>
+                  </div>
+
+                  <div className="mt-4 overflow-hidden rounded-[24px] border border-[var(--teal-100)] bg-white">
+                    {extras.map((service, index) => (
+                      <CompactExtraRow
+                        key={service.id}
+                        service={service}
+                        selected={form.alacarte.includes(service.id)}
+                        expanded={expandedExtra === service.id}
+                        onToggle={() => toggle(service.id)}
+                        onInfo={() =>
+                          setExpandedExtra((current) =>
+                            current === service.id ? null : service.id,
+                          )
+                        }
+                        last={index === extras.length - 1}
+                      />
+                    ))}
+                  </div>
+
+                  <div className="mt-3 flex items-center justify-between gap-3 rounded-2xl bg-[var(--cream-100)] px-4 py-3">
+                    <span className="font-body text-xs text-[var(--ink-muted)]">
+                      {form.alacarte.length
+                        ? `${form.alacarte.length} extra${form.alacarte.length > 1 ? 's' : ''} selected`
+                        : 'No extras selected'}
+                    </span>
+                    <strong className="font-body text-xs text-[var(--teal-900)]">
+                      Add-ons calculated separately
+                    </strong>
+                  </div>
                 </div>
               )}
 
@@ -931,7 +970,39 @@ export default function BookingForm() {
                 <p className="font-body mt-5 rounded-xl bg-[var(--terracotta-100)] px-4 py-3 text-sm font-bold text-[var(--terracotta-600)]">{error}</p>
               )}
 
-              <div className="mt-8 flex flex-col-reverse gap-3 sm:flex-row sm:justify-between">
+              {step === 1 && (
+                <div className="sticky bottom-[88px] z-30 -mx-2 mt-6 rounded-[22px] border border-[var(--teal-100)] bg-white/95 p-2.5 shadow-[0_-10px_35px_rgba(18,49,48,.14)] backdrop-blur-md sm:hidden">
+                  <div className="mb-2 flex items-center justify-between px-2">
+                    <span className="font-body text-[11px] text-[var(--ink-muted)]">
+                      {form.alacarte.length
+                        ? `${form.alacarte.length} extra${form.alacarte.length > 1 ? 's' : ''} selected`
+                        : 'Extras are optional'}
+                    </span>
+                    <span className="font-body text-[11px] font-bold text-[var(--teal-900)]">
+                      ₹{resolved.amount}{resolved.variablePricing ? '+' : ''}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-[52px_1fr] gap-2">
+                    <button
+                      type="button"
+                      onClick={() => goToStep(0, 'back')}
+                      className="btn-ghost-teal flex min-h-[48px] items-center justify-center !px-0"
+                      aria-label="Back to vehicle selection"
+                    >
+                      <ArrowLeft size={18} />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={next}
+                      className="btn-primary flex min-h-[48px] items-center justify-center gap-2"
+                    >
+                      Continue <ArrowRight size={17} />
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              <div className={`mt-8 flex flex-col-reverse gap-3 sm:flex-row sm:justify-between ${step === 1 ? 'max-sm:hidden' : ''}`}>
                 <button type="button" disabled={step === 0 || busy} onClick={() => goToStep(step - 1, 'back')} className="btn-ghost-teal disabled:invisible">
                   <ArrowLeft size={17} /> Back
                 </button>
@@ -1040,6 +1111,105 @@ export default function BookingForm() {
 
       <WaveDivider color="var(--teal-700)" />
     </section>
+  );
+}
+
+
+const EXTRA_ICONS = {
+  bead: Droplets,
+  engine: Gauge,
+  steam: Wind,
+  scrub: Waves,
+  spots: Droplets,
+  shine: Sparkles,
+};
+
+function CompactExtraRow({
+  service,
+  selected,
+  expanded,
+  onToggle,
+  onInfo,
+  last,
+}) {
+  const Icon = EXTRA_ICONS[service.animation] || Sparkles;
+  const priceLabel = addOnPriceLabel(service.id, '');
+
+  return (
+    <div
+      className={`${last ? '' : 'border-b border-[var(--teal-100)]'} ${
+        selected ? 'bg-[var(--teal-100)]/55' : 'bg-white'
+      } transition-colors`}
+    >
+      <div
+        role="button"
+        tabIndex={0}
+        onClick={onToggle}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            onToggle();
+          }
+        }}
+        className="flex min-h-[64px] cursor-pointer items-center gap-3 px-3 py-2.5 sm:px-4"
+        aria-pressed={selected}
+      >
+        <span
+          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${
+            selected
+              ? 'bg-[var(--teal-700)] text-white'
+              : 'bg-[var(--teal-100)] text-[var(--teal-700)]'
+          }`}
+        >
+          {selected ? <Check size={19} /> : <Icon size={19} />}
+        </span>
+
+        <div className="min-w-0 flex-1">
+          <strong className="font-body block truncate text-sm text-[var(--teal-900)]">
+            {service.name}
+          </strong>
+          {selected && (
+            <span className="font-body mt-0.5 block text-[10px] font-bold text-[var(--teal-700)]">
+              Selected
+            </span>
+          )}
+        </div>
+
+        <span className="font-display max-w-[120px] shrink-0 text-right text-sm leading-4 text-[var(--terracotta-600)] sm:text-base">
+          {priceLabel}
+        </span>
+
+        <button
+          type="button"
+          onClick={(event) => {
+            event.stopPropagation();
+            onInfo();
+          }}
+          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full border transition ${
+            expanded
+              ? 'border-[var(--teal-700)] bg-[var(--teal-700)] text-white'
+              : 'border-[var(--teal-100)] bg-white text-[var(--teal-700)]'
+          }`}
+          aria-label={`${expanded ? 'Hide' : 'Show'} details for ${service.name}`}
+          aria-expanded={expanded}
+        >
+          <Info size={17} />
+        </button>
+      </div>
+
+      {expanded && (
+        <div className="border-t border-[var(--teal-100)] bg-[var(--cream-50)] px-4 py-3">
+          <p className="font-body text-xs leading-5 text-[var(--ink-muted)]">
+            {service.description}
+          </p>
+          {service.pricingType !== 'fixed' && (
+            <p className="font-body mt-1.5 text-[11px] font-bold text-[var(--terracotta-600)]">
+              Final price is confirmed before work begins.
+            </p>
+          )}
+        </div>
+      )}
+    </div>
   );
 }
 
