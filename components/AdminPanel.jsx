@@ -31,6 +31,14 @@ function bookingService(booking) {
   return 'Heavy Vehicle Wash';
 }
 
+function bookingSource(booking) {
+  const notes = String(booking.notes || '');
+  const match = notes.match(/\[Source:\s*(phone|admin)\]/i);
+  if (match) return match[1].toLowerCase() === 'phone' ? 'Phone' : 'Admin';
+  if (notes.includes('[Manual admin entry]')) return 'Admin';
+  return 'Website';
+}
+
 function csvCell(value) {
   const text = value == null ? '' : String(value);
   return `"${text.replace(/"/g, '""')}"`;
@@ -43,7 +51,7 @@ function mapLink(booking) {
 
 function exportBookingsCsv(bookings, fromDate, toDate) {
   const headers = [
-    'Booking ID','Booking Date','Booking Time','Created At','Customer','Phone','Email',
+    'Booking ID','Booking Date','Booking Time','Created At','Source','Customer','Phone','Email',
     'Service','Vehicle Count','Vehicles','Add-ons','Estimated Amount','Payment Method',
     'Booking Fee Paid','Status','Group Offer','Group Location','House Address','Map Place',
     'Landmark','Google Maps','Travel From Previous (min)','Notes',
@@ -54,6 +62,7 @@ function exportBookingsCsv(bookings, fromDate, toDate) {
     booking.booking_date,
     booking.booking_time,
     booking.created_at,
+    bookingSource(booking),
     booking.name,
     booking.phone,
     booking.email,
@@ -120,6 +129,7 @@ function initialManualBooking() {
     paymentMethod: 'onsite',
     paid: false,
     status: 'received',
+    source: 'phone',
     amount: '',
   };
 }
@@ -424,7 +434,18 @@ export default function AdminPanel({ open, onClose }) {
                   {filteredBookings.map((booking) => (
                     <div key={booking.id} className="rounded-2xl bg-[var(--cream-100)] p-4 text-sm">
                       <div className="flex flex-wrap justify-between gap-3">
-                        <strong>{booking.name}</strong>
+                        <div className="flex items-center gap-2">
+                          <strong>{booking.name}</strong>
+                          <span className={`rounded-full px-2 py-0.5 text-[10px] font-extrabold ${
+                            bookingSource(booking) === 'Website'
+                              ? 'bg-[var(--teal-100)] text-[var(--teal-900)]'
+                              : bookingSource(booking) === 'Phone'
+                                ? 'bg-[var(--gold-100)] text-[var(--teal-900)]'
+                                : 'bg-[var(--terracotta-100)] text-[var(--terracotta-600)]'
+                          }`}>
+                            {bookingSource(booking)}
+                          </span>
+                        </div>
                         <span>
                           {booking.payment_method === 'advance'
                             ? booking.paid
@@ -498,6 +519,12 @@ export default function AdminPanel({ open, onClose }) {
                     <select className="field" value={manual.serviceType} onChange={(e)=>setManual({...manual,serviceType:e.target.value})}>
                       <option value="complete">Complete Care Wash</option>
                       {!manual.vehicles.some((v)=>v.type==='Heavy Vehicle') && <option value="vehicle-care">Vehicle Care Visit</option>}
+                    </select>
+                  </AdminField>
+                  <AdminField label="Source">
+                    <select className="field" value={manual.source} onChange={(e)=>setManual({...manual,source:e.target.value})}>
+                      <option value="phone">Phone</option>
+                      <option value="admin">Admin</option>
                     </select>
                   </AdminField>
                 </div>

@@ -165,6 +165,9 @@ export default function BookingForm() {
   const [expandedExtra, setExpandedExtra] = useState(null);
   const [servicePreview, setServicePreview] = useState('complete');
   const [heavyOfferWarning, setHeavyOfferWarning] = useState(null);
+  const [priceFlash, setPriceFlash] = useState(false);
+  const [nextAvailability, setNextAvailability] = useState([]);
+  const [nextAvailabilityBusy, setNextAvailabilityBusy] = useState(false);
   const [error, setError] = useState('');
   const [fieldErrors, setFieldErrors] = useState({});
   const [busy, setBusy] = useState(false);
@@ -231,6 +234,13 @@ export default function BookingForm() {
     [form.vehicleType, form.vehicleModel, form.vehicles, form.serviceType, form.alacarte, form.groupOffer],
   );
   const extras = CORE_SERVICES.filter((service) => service.selectable);
+
+  useEffect(() => {
+    setPriceFlash(true);
+    const timer = window.setTimeout(() => setPriceFlash(false), 650);
+    return () => window.clearTimeout(timer);
+  }, [resolved.amount, resolved.groupDiscount]);
+
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -341,6 +351,83 @@ export default function BookingForm() {
       cancelled = true;
     };
   }, [form.date, form.latitude, form.longitude]);
+
+  useEffect(() => {
+    const hasCurrentAvailability = slots.some((slot) => slot.available);
+    const hasLocation =
+      Number.isFinite(Number(form.latitude)) &&
+      Number.isFinite(Number(form.longitude));
+
+    if (
+      !form.date ||
+      !hasLocation ||
+      outsideArea ||
+      availabilityBusy ||
+      hasCurrentAvailability
+    ) {
+      setNextAvailability([]);
+      return;
+    }
+
+    let cancelled = false;
+
+    (async () => {
+      setNextAvailabilityBusy(true);
+      const suggestions = [];
+
+      try {
+        const base = new Date(`${form.date}T12:00:00`);
+        for (let offset = 1; offset <= 5 && suggestions.length < 3; offset += 1) {
+          const candidate = new Date(base);
+          candidate.setDate(candidate.getDate() + offset);
+          const date = candidate.toISOString().slice(0, 10);
+
+          const response = await fetch('/api/availability', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              date,
+              latitude: form.latitude,
+              longitude: form.longitude,
+            }),
+          });
+
+          if (!response.ok) continue;
+          const data = await readJson(response);
+          const availableSlots = (data.slots || []).filter((slot) => slot.available);
+
+          if (availableSlots.length) {
+            suggestions.push({
+              date,
+              label: candidate.toLocaleDateString('en-IN', {
+                weekday: 'short',
+                day: 'numeric',
+                month: 'short',
+              }),
+              slots: availableSlots.slice(0, 2),
+            });
+          }
+        }
+
+        if (!cancelled) setNextAvailability(suggestions);
+      } catch {
+        if (!cancelled) setNextAvailability([]);
+      } finally {
+        if (!cancelled) setNextAvailabilityBusy(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    form.date,
+    form.latitude,
+    form.longitude,
+    slots,
+    outsideArea,
+    availabilityBusy,
+  ]);
 
   const update = (key, value) => {
     setError('');
@@ -511,11 +598,32 @@ export default function BookingForm() {
     );
   }
 
+  function focusBookingError(fieldName) {
+    const ids = {
+      name: 'booking-name',
+      phone: 'booking-phone',
+      address: 'booking-address',
+      mapAddress: 'booking-map',
+      drivePermission: 'booking-drive-permission',
+      date: 'booking-date',
+      slotId: 'booking-slots',
+    };
+
+    window.setTimeout(() => {
+      const target = document.getElementById(ids[fieldName]);
+      if (!target) return;
+      target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      const focusable = target.matches?.('input,textarea,select,button')
+        ? target
+        : target.querySelector?.('input,textarea,select,button');
+      focusable?.focus?.({ preventScroll: true });
+    }, 60);
+  }
+
   function validateDetails() {
     const nextErrors = {};
     if (form.name.trim().length < 2) nextErrors.name = 'Enter your full name.';
     if (!/^\d{10}$/.test(form.phone)) nextErrors.phone = `Enter exactly 10 digits (${form.phone.length}/10 entered).`;
-    if (form.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) nextErrors.email = 'Enter a valid email address or leave it blank.';
     if (form.address.trim().length < 5) nextErrors.address = 'Enter your house name or exact address.';
     if (!Number.isFinite(Number(form.latitude)) || !Number.isFinite(Number(form.longitude))) nextErrors.mapAddress = 'Select a place from Google suggestions or use your current location.';
     if (form.serviceType === 'vehicle-care' && !form.drivePermission) nextErrors.drivePermission = 'Please confirm owner permission for the short vehicle run/drive.';
@@ -528,7 +636,9 @@ export default function BookingForm() {
 
     setFieldErrors(nextErrors);
     if (Object.keys(nextErrors).length) {
-      setError(Object.values(nextErrors)[0]);
+      const firstField = Object.keys(nextErrors)[0];
+      setError('');
+      focusBookingError(firstField);
       return false;
     }
     if (outsideArea) {
@@ -699,8 +809,8 @@ export default function BookingForm() {
                           )}
 
                           <div>
-                            <span className="font-body text-xs font-bold text-[var(--teal-900)]">Model (optional)</span>
-                            <input className="field mt-2" value={vehicle.model || ''} onChange={(e)=>updateVehicle(index,'model',e.target.value)} placeholder={vehicle.type === 'Heavy Vehicle' ? 'e.g. BharatBenz / CAT' : 'e.g. Baleno'}/>
+                            <span className="font-body text-[11px] font-bold text-[var(--ink-muted)]">Model <span className="font-normal">(optional)</span></span>
+                            <input className="field mt-2 !bg-[var(--cream-50)]" value={vehicle.model || ''} onChange={(e)=>updateVehicle(index,'model',e.target.value)} placeholder={vehicle.type === 'Heavy Vehicle' ? 'e.g. BharatBenz / CAT' : 'e.g. Baleno'}/>
                           </div>
                         </div>
                       ))}
@@ -856,22 +966,21 @@ export default function BookingForm() {
                           <Field label="How long has it been unused?"><select className="field" value={form.unusedDuration} onChange={(e)=>update('unusedDuration',e.target.value)}><option value="less-than-1-month">Less than 1 month</option><option value="1-3-months">1–3 months</option><option value="3-plus-months">3+ months</option></select></Field>
                         </div>
                         <div className="mt-3"><Field label="Key / access instructions"><input className="field" value={form.keyInstructions} onChange={(e)=>update('keyInstructions',e.target.value)} placeholder="Who has the key, gate/security instructions, etc."/></Field></div>
-                        <label className={`permission-card mt-3 ${fieldErrors.drivePermission?'error':''}`}><input type="checkbox" checked={form.drivePermission} onChange={(e)=>update('drivePermission',e.target.checked)}/><span><strong>I authorise a short run/drive of up to 5 km.</strong><small>Only where safe and legally permitted.</small></span></label>
+                        <label id="booking-drive-permission" className={`permission-card mt-3 ${fieldErrors.drivePermission?'error':''}`}><input type="checkbox" checked={form.drivePermission} onChange={(e)=>update('drivePermission',e.target.checked)}/><span><strong>I authorise a short run/drive of up to 5 km.</strong><small>Only where safe and legally permitted.</small></span></label>
                         {fieldErrors.drivePermission&&<p className="font-body mt-2 text-xs font-bold text-[var(--terracotta-600)]">{fieldErrors.drivePermission}</p>}
                       </div>
                     )}
 
                     <div className="mt-5 grid gap-4 sm:grid-cols-2">
-                      <Field label="Full name" error={fieldErrors.name}><input className="field" value={form.name} onChange={(event) => update('name', event.target.value)} /></Field>
-                      <Field label="Phone" error={fieldErrors.phone}><input className="field" inputMode="numeric" maxLength={15} value={form.phone} onChange={(event) => update('phone', event.target.value.replace(/\D/g, ''))} placeholder="Exact 10-digit number" /></Field>
-                      <Field label="Email (optional)" error={fieldErrors.email}><input className="field" type="email" value={form.email} onChange={(event) => update('email', event.target.value)} /></Field>
+                      <Field label="Full name" error={fieldErrors.name}><input id="booking-name" className="field" value={form.name} onChange={(event) => update('name', event.target.value)} /></Field>
+                      <Field label="Phone" error={fieldErrors.phone}><input id="booking-phone" className="field" inputMode="numeric" maxLength={10} value={form.phone} onChange={(event) => update('phone', event.target.value.replace(/\D/g, ''))} placeholder="10-digit mobile number" /></Field>
                     </div>
 
-                    <div className="mt-4"><Field label="House address" error={fieldErrors.address}><textarea className="field" rows={2} value={form.address} onChange={(event) => update('address', event.target.value)} placeholder="House name, building, road and locality" /></Field></div>
+                    <div className="mt-4"><Field label="House address" error={fieldErrors.address}><textarea id="booking-address" className="field" rows={2} value={form.address} onChange={(event) => update('address', event.target.value)} placeholder="House name, building, road and locality" /></Field></div>
 
                     <div className="relative mt-4">
                       <Field label="Place / map location" error={fieldErrors.mapAddress}>
-                        <input className="field pr-12" value={form.mapAddress} onChange={(event) => {setFieldErrors((current) => ({ ...current, mapAddress: '' }));setError('');setForm((current) => ({...current,mapAddress: event.target.value,placeId: '',latitude: null,longitude: null,slotId: ''}));}} placeholder="Search a road, junction, church, shop or nearby place" />
+                        <input id="booking-map" className="field pr-12" value={form.mapAddress} onChange={(event) => {setFieldErrors((current) => ({ ...current, mapAddress: '' }));setError('');setForm((current) => ({...current,mapAddress: event.target.value,placeId: '',latitude: null,longitude: null,slotId: ''}));}} placeholder="Search a road, junction, church, shop or nearby place" />
                       </Field>
                       {addressBusy && <Loader2 className="absolute right-4 top-10 animate-spin" size={18} />}
                       {!!suggestions.length && <div className="absolute z-30 mt-2 w-full overflow-hidden rounded-2xl border bg-white shadow-xl">{suggestions.map((item) => <button key={item.placeId} type="button" onClick={() => chooseAddress(item)} className="block w-full border-b px-4 py-3 text-left font-body text-sm hover:bg-[var(--cream-100)]"><strong>{item.mainText}</strong><span className="block text-xs text-[var(--ink-muted)]">{item.secondaryText}</span></button>)}</div>}
@@ -879,10 +988,9 @@ export default function BookingForm() {
                       {Number.isFinite(Number(form.latitude)) && Number.isFinite(Number(form.longitude)) && <a href={mapsLink(form.latitude, form.longitude)} target="_blank" rel="noreferrer" className="font-body ml-3 inline-block text-xs font-bold text-[var(--teal-700)] underline">Preview map</a>}
                     </div>
 
-                    <div className="mt-4"><Field label="Landmark / directions (optional)"><input className="field" value={form.landmark} onChange={(event) => update('landmark', event.target.value)} placeholder="Near a church, junction, shop or gate" /></Field></div>
                     <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                      <Field label="Date" error={fieldErrors.date}><input className="field" type="date" min={new Date().toISOString().slice(0, 10)} value={form.date} onChange={(event) => update('date', event.target.value)} /></Field>
-                      <Field label="Notes (optional)"><input className="field" value={form.notes} onChange={(event) => update('notes', event.target.value)} placeholder="Gate instructions or special requests" /></Field>
+                      <Field label="Date" error={fieldErrors.date}><input id="booking-date" className="field" type="date" min={new Date().toISOString().slice(0, 10)} value={form.date} onChange={(event) => update('date', event.target.value)} /></Field>
+                      <Field label="Notes (optional)"><input className="field" value={form.notes} onChange={(event) => update('notes', event.target.value)} placeholder="Landmark, gate directions or additional details" /></Field>
                     </div>
 
                     {distance != null && !outsideArea && <p className="font-body mt-4 rounded-xl bg-[var(--teal-100)] px-4 py-3 text-sm text-[var(--teal-900)]">Approximate road distance: <strong>{distance} km</strong>{distance > 15 ? ' · Extended service area' : ''}</p>}
@@ -895,9 +1003,50 @@ export default function BookingForm() {
                       </div>
                     ) : (
                       <>
-                        <h4 className="font-display mt-5 text-xl text-[var(--teal-900)]">Available slots</h4>
+                        <div id="booking-slots"><h4 className="font-display mt-5 text-xl text-[var(--teal-900)]">Available slots</h4>
                         {availabilityBusy ? <p className="font-body mt-3 flex items-center gap-2 text-sm"><Loader2 size={16} className="animate-spin" /> Checking route and availability…</p> : <div className="mt-3 grid gap-2 sm:grid-cols-2">{slots.map((slot) => <div key={slot.id} className={`rounded-2xl border-2 p-3 ${form.slotId === slot.id ? 'border-[var(--teal-700)] bg-[var(--teal-100)]' : slot.available ? 'border-[var(--teal-100)] bg-white' : 'border-gray-200 bg-gray-100 text-gray-400'}`}><button type="button" disabled={!slot.available} onClick={() => update('slotId', slot.id)} className={`block w-full text-left ${slot.available ? '' : 'cursor-not-allowed'}`}><strong className="font-body block text-sm">{slot.label}</strong><span className="font-body mt-1 block text-xs">{slot.available ? 'Available' : slot.reason}</span></button>{slot.whatsappOnly && <a href={enquiryWhatsApp({ form, resolved, distance, requestedSlot: slot })} target="_blank" rel="noreferrer" className="font-body mt-2 inline-flex items-center gap-1 text-xs font-bold text-[var(--terracotta-600)] underline"><MessageCircle size={14}/> Check on WhatsApp</a>}</div>)}</div>}
                         {fieldErrors.slotId && <p className="font-body mt-2 text-xs font-bold text-[var(--terracotta-600)]">{fieldErrors.slotId}</p>}
+
+                        {!availabilityBusy && !slots.some((slot) => slot.available) && (
+                          <div className="mt-4 rounded-2xl border border-[var(--teal-100)] bg-[var(--cream-50)] p-4">
+                            <strong className="font-body text-sm text-[var(--teal-900)]">
+                              {nextAvailabilityBusy ? 'Finding the next available times…' : 'Try the next available day'}
+                            </strong>
+
+                            {!nextAvailabilityBusy && nextAvailability.length > 0 && (
+                              <div className="mt-3 grid gap-2">
+                                {nextAvailability.map((option) => (
+                                  <button
+                                    key={option.date}
+                                    type="button"
+                                    onClick={() => update('date', option.date)}
+                                    className="flex items-center justify-between rounded-xl border border-[var(--teal-100)] bg-white px-3 py-3 text-left"
+                                  >
+                                    <span>
+                                      <strong className="font-body block text-sm text-[var(--teal-900)]">{option.label}</strong>
+                                      <small className="font-body mt-0.5 block text-[11px] text-[var(--ink-muted)]">
+                                        {option.slots.map((slot) => slot.label).join(' · ')}
+                                      </small>
+                                    </span>
+                                    <ArrowRight size={16} className="shrink-0 text-[var(--terracotta-600)]" />
+                                  </button>
+                                ))}
+                              </div>
+                            )}
+
+                            {!nextAvailabilityBusy && nextAvailability.length === 0 && (
+                              <a
+                                href={enquiryWhatsApp({ form, resolved, distance })}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="font-body mt-3 inline-flex items-center gap-2 text-xs font-extrabold text-[var(--terracotta-600)] underline"
+                              >
+                                <MessageCircle size={14}/> Ask us on WhatsApp
+                              </a>
+                            )}
+                          </div>
+                        )}
+                      </div>
                       </>
                     )}
                   </div>
@@ -906,12 +1055,13 @@ export default function BookingForm() {
                 {step === 4 && (
                   <div>
                     <span className="font-label text-[10px] text-[var(--terracotta-600)]">REVIEW & BOOK</span>
-                    <h2 className="font-display mt-1 text-2xl text-[var(--teal-900)]">Everything in one place.</h2>
+                    <h2 className="font-display mt-1 text-2xl text-[var(--teal-900)]">Review and confirm.</h2>
 
                     <div className="mt-4 rounded-3xl bg-[var(--teal-900)] p-5 text-white">
                       <Summary label="Vehicles" value={`${form.vehicleCount} · ${vehicleList.map((v)=>v.type === 'Heavy Vehicle' ? heavyVehicleLabel(v.heavyType) : v.type).join(', ')}`} />
                       <Summary label="Service" value={allHeavyVehicles ? 'Heavy Vehicle Wash' : form.serviceType === 'vehicle-care' ? 'Vehicle Care Visit' : hasHeavyVehicle ? 'Complete Care + Heavy Vehicle Wash' : 'Complete Care Wash'} />
                       <Summary label="Extras" value={form.alacarte.length ? form.alacarte.map(serviceName).join(', ') : 'None'} />
+                      <Summary label="Location" value={form.address || form.mapAddress || 'Not added'} />
                       <Summary label="Slot" value={selectedSlot?.label || 'Not selected'} />
                       <div className="mt-5 border-t border-white/15 pt-4"><span className="font-body text-xs text-[var(--teal-100)]">Estimated service total</span><strong className="font-display mt-1 block text-4xl">₹{resolved.amount}{resolved.variablePricing ? '+' : ''}</strong>{resolved.variablePricing && <p className="mt-1 text-xs text-[var(--teal-100)]">Condition-based extras will be confirmed before work.</p>}{resolved.groupDiscount > 0 && (
                         <p className="mt-2 rounded-xl bg-white/10 p-2 text-xs">
@@ -944,7 +1094,7 @@ export default function BookingForm() {
                             ? `${form.alacarte.length} extra${form.alacarte.length === 1 ? '' : 's'} selected`
                             : selectedSlot?.label || 'Complete this step'}
                       </span>
-                      <strong className="font-body text-[var(--teal-900)]">
+                      <strong className={`font-body text-[var(--teal-900)] ${priceFlash ? 'price-change-flash' : ''}`}>
                         Est. ₹{resolved.amount}{resolved.variablePricing ? '+' : ''}
                       </strong>
                     </div>
@@ -1032,7 +1182,7 @@ export default function BookingForm() {
                 <Summary label="Extras" value={form.alacarte.length ? form.alacarte.map(serviceName).join(', ') : 'None'} />
                 <Summary label="Slot" value={selectedSlot?.label || 'Not selected'} />
               </div>
-              <div className="mt-6 border-t border-white/15 pt-5"><span className="text-xs text-[var(--teal-100)]">Estimated total</span><strong className="font-display mt-1 block text-4xl">₹{resolved.amount}{resolved.variablePricing?'+':''}</strong></div>
+              <div className="mt-6 border-t border-white/15 pt-5"><span className="text-xs text-[var(--teal-100)]">Estimated total</span><strong className={`font-display mt-1 block text-4xl ${priceFlash ? 'price-change-flash' : ''}`}>₹{resolved.amount}{resolved.variablePricing?'+':''}</strong></div>
             </aside>
           </div>
         </div>
@@ -1078,6 +1228,17 @@ export default function BookingForm() {
         .booking-step-slide.is-back { animation-name:bookingStepBack; }
         @keyframes bookingStepForward { from { opacity:0; transform:translate3d(26px,0,0); } to { opacity:1; transform:translate3d(0,0,0); } }
         @keyframes bookingStepBack { from { opacity:0; transform:translate3d(-26px,0,0); } to { opacity:1; transform:translate3d(0,0,0); } }
+        @keyframes priceFlash {
+          0% { transform: scale(1); background: transparent; }
+          35% { transform: scale(1.06); background: rgba(238,178,67,.28); }
+          100% { transform: scale(1); background: transparent; }
+        }
+        :global(.price-change-flash) {
+          display: inline-block;
+          border-radius: 8px;
+          padding: 1px 4px;
+          animation: priceFlash .62s ease-out;
+        }
         @keyframes bookingActionPulse {
           0%, 100% { transform: scale(1); box-shadow: 0 9px 24px rgba(209,88,42,.24); }
           50% { transform: scale(1.018); box-shadow: 0 10px 30px rgba(209,88,42,.42); }

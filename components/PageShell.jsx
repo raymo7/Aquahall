@@ -3,6 +3,14 @@ import SiteFooter from './SiteFooter';
 import MobileBottomNav from './MobileBottomNav';
 import BackToTop from './BackToTop';
 
-export default function PageShell({ children }) {
-  return <><SiteHeader /><main>{children}</main><SiteFooter /><MobileBottomNav /><BackToTop /></>;
+export default function PageShell({ children, hideFooter = false }) {
+  return (
+    <>
+      <SiteHeader />
+      <main>{children}</main>
+      {!hideFooter && <SiteFooter />}
+      <MobileBottomNav />
+      <BackToTop />
+    </>
+  );
 }
