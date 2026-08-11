@@ -164,6 +164,7 @@ export default function BookingForm() {
   const [slideDirection, setSlideDirection] = useState('forward');
   const [expandedExtra, setExpandedExtra] = useState(null);
   const [servicePreview, setServicePreview] = useState('complete');
+  const [heavyOfferWarning, setHeavyOfferWarning] = useState(null);
   const [error, setError] = useState('');
   const [fieldErrors, setFieldErrors] = useState({});
   const [busy, setBusy] = useState(false);
@@ -384,7 +385,7 @@ export default function BookingForm() {
     });
   }
 
-  function updateVehicle(index, key, value) {
+  function applyVehicleUpdate(index, key, value) {
     setForm((current) => {
       const currentVehicles = Array.isArray(current.vehicles) && current.vehicles.length
         ? current.vehicles
@@ -418,6 +419,32 @@ export default function BookingForm() {
       };
     });
   }
+
+  function updateVehicle(index, key, value) {
+    const introducingFirstHeavyVehicle =
+      key === 'type' &&
+      value === 'Heavy Vehicle' &&
+      form.vehicleCount >= 3 &&
+      !form.vehicles.some(
+        (vehicle, vehicleIndex) =>
+          vehicleIndex !== index && categoryForVehicle(vehicle.type) === 'heavy',
+      );
+
+    if (introducingFirstHeavyVehicle) {
+      setHeavyOfferWarning({ index, key, value });
+      return;
+    }
+
+    applyVehicleUpdate(index, key, value);
+  }
+
+  function confirmHeavyVehicleSelection() {
+    if (!heavyOfferWarning) return;
+    const { index, key, value } = heavyOfferWarning;
+    setHeavyOfferWarning(null);
+    applyVehicleUpdate(index, key, value);
+  }
+
 
   async function chooseAddress(item) {
     setAddressBusy(true);
@@ -635,22 +662,21 @@ export default function BookingForm() {
                       {[1,2,3,4].map((count)=><button key={count} type="button" onClick={()=>setVehicleCount(count)} className={`vehicle-count ${form.vehicleCount===count?'active':''}`}>{count}{count===4?'+':''}</button>)}
                     </div>
 
-                    <div className="booking-offer mt-4">
+                    <div className={`booking-offer mt-4 ${form.vehicleCount >= 3 && hasHeavyVehicle ? '!border-gray-300 !bg-gray-100' : ''}`}>
                       <strong>
-                        {form.vehicleCount >= 3 && !hasHeavyVehicle
-                          ? '🎉 10% same-location discount applied'
-                          : '✨ Book 3 cars at the same location — get 10% off'}
+                        {form.vehicleCount >= 3 && hasHeavyVehicle
+                          ? '10% group offer not applicable'
+                          : form.vehicleCount >= 3
+                            ? '🎉 10% group offer applied'
+                            : '✨ Book 3 cars at the same location — get 10% off'}
                       </strong>
                       <p>
-                        {form.vehicleCount >= 3 && !hasHeavyVehicle
-                          ? `You save ₹${resolved.groupDiscount || 0} on the Complete Care Wash subtotal.`
-                          : 'Choose 3 or more cars in one booking at the same location. The 10% discount applies automatically to Complete Care Wash.'}
+                        {form.vehicleCount >= 3 && hasHeavyVehicle
+                          ? 'This booking includes a heavy vehicle. The 10% group offer is available only when all 3 or more vehicles are cars.'
+                          : form.vehicleCount >= 3
+                            ? `You save ₹${resolved.groupDiscount || 0} on the Complete Care Wash subtotal.`
+                            : 'Choose 3 or more cars in one booking at the same location to get 10% off Complete Care Wash.'}
                       </p>
-                      {hasHeavyVehicle && form.vehicleCount >= 3 && (
-                        <p className="mt-1 font-bold">
-                          The 3-car promotion is for car bookings only; heavy vehicles keep their listed price.
-                        </p>
-                      )}
                     </div>
 
                     <div className="mt-5 space-y-3">
@@ -1011,6 +1037,40 @@ export default function BookingForm() {
           </div>
         </div>
       </div>
+
+      {heavyOfferWarning && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[rgba(8,42,40,.62)] px-4 backdrop-blur-[2px]">
+          <div className="w-full max-w-sm rounded-[26px] border border-[var(--teal-100)] bg-white p-5 shadow-[0_24px_70px_rgba(8,42,40,.28)]">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--terracotta-100)] text-[var(--terracotta-600)]">
+              <Truck size={23} />
+            </div>
+            <h3 className="font-display mt-4 text-2xl text-[var(--teal-900)]">
+              3-car offer won’t apply
+            </h3>
+            <p className="font-body mt-2 text-sm leading-6 text-[var(--ink-muted)]">
+              The 10% same-location offer applies only when all 3 or more vehicles are cars.
+              Heavy vehicles keep their listed price.
+            </p>
+
+            <div className="mt-5 grid gap-2">
+              <button
+                type="button"
+                onClick={confirmHeavyVehicleSelection}
+                className="btn-primary flex min-h-[48px] items-center justify-center gap-2"
+              >
+                Continue with Heavy Vehicle <ArrowRight size={17} />
+              </button>
+              <button
+                type="button"
+                onClick={() => setHeavyOfferWarning(null)}
+                className="btn-ghost-teal min-h-[46px]"
+              >
+                Keep this vehicle as a car
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <style jsx>{`
         .booking-step-slide { width:100%; will-change:transform,opacity; animation-duration:240ms; animation-timing-function:cubic-bezier(.22,1,.36,1); animation-fill-mode:both; }
