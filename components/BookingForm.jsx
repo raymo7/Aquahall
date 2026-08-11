@@ -617,7 +617,7 @@ export default function BookingForm() {
           </div>
 
           <div className="grid lg:grid-cols-[1fr_290px]">
-            <div className="overflow-x-hidden p-4 pb-44 sm:p-7 sm:pb-28 md:p-8">
+            <div className="overflow-x-hidden p-4 pb-36 sm:p-7 sm:pb-28 md:p-8">
               <div
                 ref={stepTopRef}
                 key={`${step}-${slideDirection}`}
@@ -684,7 +684,7 @@ export default function BookingForm() {
                   <div>
                     <span className="font-label text-[10px] text-[var(--terracotta-600)]">CHOOSE YOUR CARE</span>
                     <h2 className="font-display mt-1 text-2xl text-[var(--teal-900)]">Pick one service to book.</h2>
-                    <p className="font-body mt-1 text-sm text-[var(--ink-muted)]">Tap the Book button on the service you want.</p>
+                    <p className="font-body mt-1 text-sm text-[var(--ink-muted)]">Swipe sideways to compare, then book the service you want.</p>
 
                     <button
                       type="button"
@@ -694,8 +694,8 @@ export default function BookingForm() {
                       <ArrowLeft size={17} /> Back to vehicles
                     </button>
 
-                    <div className="mt-5 grid gap-4 md:grid-cols-2">
-                      <div className="service-choice active">
+                    <div className="mt-5 flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2 md:grid md:grid-cols-2 md:overflow-visible md:pb-0">
+                      <div className="service-choice active min-w-[86%] snap-start sm:min-w-[72%] md:min-w-0">
                         <span className="service-choice-icon"><Car size={24}/></span>
                         <span className="font-label text-[9px]">{allHeavyVehicles ? 'HEAVY VEHICLE WASH' : 'COMPLETE CARE WASH'}</span>
                         <strong>{allHeavyVehicles ? 'Heavy vehicle cleaning at your location.' : 'A fresh start, inside and out.'}</strong>
@@ -706,7 +706,7 @@ export default function BookingForm() {
                       </div>
 
                       {!hasHeavyVehicle && (
-                        <div className={`service-choice care ${form.serviceType==='vehicle-care'?'active':''}`}>
+                        <div className={`service-choice care min-w-[86%] snap-start sm:min-w-[72%] md:min-w-0 ${form.serviceType==='vehicle-care'?'active':''}`}>
                           <span className="service-choice-icon"><KeyRound size={24}/></span>
                           <span className="font-label text-[9px]">VEHICLE CARE VISIT</span>
                           <strong>Away from home? We’ll check in on your car.</strong>
@@ -834,7 +834,7 @@ export default function BookingForm() {
                 <>
                   {/* Mobile: a true viewport-following action bar. It stays above the
                       bottom navigation while the customer scrolls long steps. */}
-                  <div className="fixed inset-x-3 bottom-[86px] z-[60] mx-auto max-w-[760px] rounded-[20px] border border-[var(--teal-100)] bg-white/96 p-2 shadow-[0_12px_40px_rgba(18,49,48,.24)] backdrop-blur-xl sm:hidden">
+                  <div className="fixed left-3 right-3 z-[60] mx-auto max-w-[760px] rounded-[20px] border border-[var(--teal-100)] bg-white/96 p-2 shadow-[0_12px_40px_rgba(18,49,48,.24)] backdrop-blur-xl sm:hidden booking-mobile-actions">
                     <div className="mb-1.5 flex items-center justify-between px-2 text-[11px]">
                       <span className="font-body text-[var(--ink-muted)]">
                         {step === 0
@@ -957,6 +957,17 @@ export default function BookingForm() {
           position: relative;
           overflow: hidden;
           animation: bookingActionPulse 1.25s ease-in-out infinite;
+        }
+        :global(.booking-mobile-actions) {
+          bottom: calc(78px + env(safe-area-inset-bottom));
+        }
+        @supports (height: 100dvh) {
+          :global(.booking-mobile-actions) {
+            bottom: calc(74px + env(safe-area-inset-bottom));
+          }
+        }
+        :global(.service-choice) {
+          scrollbar-width: none;
         }
         :global(.booking-action-spark)::after {
           content: '';
