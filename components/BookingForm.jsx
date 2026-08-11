@@ -152,6 +152,7 @@ export default function BookingForm() {
   const sessionToken = useRef(globalThis.crypto?.randomUUID?.() || String(Date.now()));
 
   const [step, setStep] = useState(0);
+  const [slideDirection, setSlideDirection] = useState('forward');
   const [error, setError] = useState('');
   const [fieldErrors, setFieldErrors] = useState({});
   const [busy, setBusy] = useState(false);
@@ -247,11 +248,6 @@ export default function BookingForm() {
       };
     });
   }, []);
-
-  useEffect(() => {
-    if (step === 0) return;
-    setTimeout(() => wizardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 60);
-  }, [step]);
 
   useEffect(() => {
     if (!form.mapAddress || form.mapAddress.length < 3 || form.placeId) {
@@ -490,9 +486,14 @@ export default function BookingForm() {
     return true;
   }
 
+  function goToStep(targetStep, direction = 'forward') {
+    setSlideDirection(direction);
+    setStep(Math.max(0, Math.min(3, targetStep)));
+  }
+
   function next() {
     if (step === 2 && !validateDetails()) return;
-    setStep((current) => Math.min(current + 1, 3));
+    goToStep(step + 1, 'forward');
   }
 
   async function submit() {
@@ -520,6 +521,7 @@ export default function BookingForm() {
       setError(requestError.message);
       if (/slot/i.test(requestError.message)) {
         setForm((current) => ({ ...current, slotId: '' }));
+        setSlideDirection('back');
         setStep(2);
       }
     } finally {
@@ -579,7 +581,11 @@ export default function BookingForm() {
           </div>
 
           <div className="grid lg:grid-cols-[1fr_320px]">
-            <div className="p-5 sm:p-8 md:p-10">
+            <div className="overflow-x-hidden p-5 sm:p-8 md:p-10">
+              <div
+                key={`${step}-${slideDirection}`}
+                className={`booking-step-slide ${slideDirection === 'back' ? 'is-back' : 'is-forward'}`}
+              >
               {step === 0 && (
                 <div>
                   <span className="font-label text-[10px] text-[var(--terracotta-600)]">YOUR VEHICLES</span>
@@ -906,7 +912,7 @@ export default function BookingForm() {
               )}
 
               <div className="mt-8 flex flex-col-reverse gap-3 sm:flex-row sm:justify-between">
-                <button type="button" disabled={step === 0 || busy} onClick={() => setStep((current) => Math.max(0, current - 1))} className="btn-ghost-teal disabled:invisible">
+                <button type="button" disabled={step === 0 || busy} onClick={() => goToStep(step - 1, 'back')} className="btn-ghost-teal disabled:invisible">
                   <ArrowLeft size={17} /> Back
                 </button>
                 {step < 3 ? (
@@ -918,6 +924,7 @@ export default function BookingForm() {
                     {busy ? <><Loader2 size={17} className="animate-spin" /> Saving…</> : <>Confirm booking <ArrowRight size={17} /></>}
                   </button>
                 )}
+              </div>
               </div>
             </div>
 
@@ -941,6 +948,76 @@ export default function BookingForm() {
           </div>
         </div>
       </div>
+      <style jsx>{`
+        .booking-step-slide {
+          width: 100%;
+          will-change: transform, opacity;
+          animation-duration: 260ms;
+          animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+          animation-fill-mode: both;
+        }
+
+        .booking-step-slide.is-forward {
+          animation-name: bookingStepForward;
+        }
+
+        .booking-step-slide.is-back {
+          animation-name: bookingStepBack;
+        }
+
+        @keyframes bookingStepForward {
+          from {
+            opacity: 0;
+            transform: translate3d(34px, 0, 0);
+          }
+          to {
+            opacity: 1;
+            transform: translate3d(0, 0, 0);
+          }
+        }
+
+        @keyframes bookingStepBack {
+          from {
+            opacity: 0;
+            transform: translate3d(-34px, 0, 0);
+          }
+          to {
+            opacity: 1;
+            transform: translate3d(0, 0, 0);
+          }
+        }
+
+        @media (min-width: 768px) {
+          @keyframes bookingStepForward {
+            from {
+              opacity: 0;
+              transform: translate3d(46px, 0, 0);
+            }
+            to {
+              opacity: 1;
+              transform: translate3d(0, 0, 0);
+            }
+          }
+
+          @keyframes bookingStepBack {
+            from {
+              opacity: 0;
+              transform: translate3d(-46px, 0, 0);
+            }
+            to {
+              opacity: 1;
+              transform: translate3d(0, 0, 0);
+            }
+          }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .booking-step-slide {
+            animation: none !important;
+          }
+        }
+      `}</style>
+
       <WaveDivider color="var(--teal-700)" />
     </section>
   );
