@@ -149,6 +149,7 @@ function enquiryWhatsApp({ form, resolved, distance, requestedSlot }) {
 
 export default function BookingForm() {
   const wizardRef = useRef(null);
+  const stepTopRef = useRef(null);
   const sessionToken = useRef(globalThis.crypto?.randomUUID?.() || String(Date.now()));
 
   const [step, setStep] = useState(0);
@@ -489,6 +490,25 @@ export default function BookingForm() {
   function goToStep(targetStep, direction = 'forward') {
     setSlideDirection(direction);
     setStep(Math.max(0, Math.min(3, targetStep)));
+
+    // The Service step can be much taller than the next steps.
+    // After switching panels, bring only the changing step area back into view
+    // so the customer sees the TOP of the new step instead of landing near its bottom.
+    window.setTimeout(() => {
+      const target = stepTopRef.current;
+      if (!target) return;
+
+      const rect = target.getBoundingClientRect();
+      const safeTop = 92;
+
+      // Avoid unnecessary movement if the new step heading is already visible.
+      if (rect.top < safeTop || rect.top > window.innerHeight * 0.42) {
+        window.scrollTo({
+          top: Math.max(0, window.scrollY + rect.top - safeTop),
+          behavior: 'smooth',
+        });
+      }
+    }, 80);
   }
 
   function next() {
@@ -521,8 +541,7 @@ export default function BookingForm() {
       setError(requestError.message);
       if (/slot/i.test(requestError.message)) {
         setForm((current) => ({ ...current, slotId: '' }));
-        setSlideDirection('back');
-        setStep(2);
+        goToStep(2, 'back');
       }
     } finally {
       setBusy(false);
@@ -583,6 +602,7 @@ export default function BookingForm() {
           <div className="grid lg:grid-cols-[1fr_320px]">
             <div className="overflow-x-hidden p-5 sm:p-8 md:p-10">
               <div
+                ref={stepTopRef}
                 key={`${step}-${slideDirection}`}
                 className={`booking-step-slide ${slideDirection === 'back' ? 'is-back' : 'is-forward'}`}
               >
