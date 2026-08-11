@@ -771,16 +771,6 @@ export default function BookingForm() {
                     ))}
                   </div>
 
-                  <div className="mt-3 flex items-center justify-between gap-3 rounded-2xl bg-[var(--cream-100)] px-4 py-3">
-                    <span className="font-body text-xs text-[var(--ink-muted)]">
-                      {form.alacarte.length
-                        ? `${form.alacarte.length} extra${form.alacarte.length > 1 ? 's' : ''} selected`
-                        : 'No extras selected'}
-                    </span>
-                    <strong className="font-body text-xs text-[var(--teal-900)]">
-                      Add-ons calculated separately
-                    </strong>
-                  </div>
                 </div>
               )}
 
@@ -970,52 +960,54 @@ export default function BookingForm() {
                 <p className="font-body mt-5 rounded-xl bg-[var(--terracotta-100)] px-4 py-3 text-sm font-bold text-[var(--terracotta-600)]">{error}</p>
               )}
 
-              {step === 1 && (
-                <div className="sticky bottom-[88px] z-30 -mx-2 mt-6 rounded-[22px] border border-[var(--teal-100)] bg-white/95 p-2.5 shadow-[0_-10px_35px_rgba(18,49,48,.14)] backdrop-blur-md sm:hidden">
-                  <div className="mb-2 flex items-center justify-between px-2">
+              {step === 1 ? (
+                <div className="mt-5">
+                  <div className="mb-2.5 flex items-center justify-between gap-3 px-1">
                     <span className="font-body text-[11px] text-[var(--ink-muted)]">
                       {form.alacarte.length
                         ? `${form.alacarte.length} extra${form.alacarte.length > 1 ? 's' : ''} selected`
                         : 'Extras are optional'}
                     </span>
                     <span className="font-body text-[11px] font-bold text-[var(--teal-900)]">
-                      ₹{resolved.amount}{resolved.variablePricing ? '+' : ''}
+                      Est. ₹{resolved.amount}{resolved.variablePricing ? '+' : ''}
                     </span>
                   </div>
-                  <div className="grid grid-cols-[52px_1fr] gap-2">
+
+                  <div className="grid grid-cols-[54px_1fr] gap-2.5 sm:flex sm:justify-between">
                     <button
                       type="button"
                       onClick={() => goToStep(0, 'back')}
-                      className="btn-ghost-teal flex min-h-[48px] items-center justify-center !px-0"
+                      className="btn-ghost-teal flex min-h-[50px] items-center justify-center !px-0 sm:px-5"
                       aria-label="Back to vehicle selection"
                     >
                       <ArrowLeft size={18} />
+                      <span className="hidden sm:inline">Back</span>
                     </button>
                     <button
                       type="button"
                       onClick={next}
-                      className="btn-primary flex min-h-[48px] items-center justify-center gap-2"
+                      className="btn-primary flex min-h-[50px] items-center justify-center gap-2"
                     >
                       Continue <ArrowRight size={17} />
                     </button>
                   </div>
                 </div>
+              ) : (
+                <div className="mt-8 flex flex-col-reverse gap-3 sm:flex-row sm:justify-between">
+                  <button type="button" disabled={step === 0 || busy} onClick={() => goToStep(step - 1, 'back')} className="btn-ghost-teal disabled:invisible">
+                    <ArrowLeft size={17} /> Back
+                  </button>
+                  {step < 3 ? (
+                    <button type="button" onClick={next} disabled={step === 2 && outsideArea} className="btn-primary flex items-center justify-center gap-2 disabled:cursor-not-allowed disabled:opacity-50">
+                      Continue <ArrowRight size={17} />
+                    </button>
+                  ) : (
+                    <button type="button" onClick={submit} disabled={busy} className="btn-primary flex items-center justify-center gap-2">
+                      {busy ? <><Loader2 size={17} className="animate-spin" /> Saving…</> : <>Confirm booking <ArrowRight size={17} /></>}
+                    </button>
+                  )}
+                </div>
               )}
-
-              <div className={`mt-8 flex flex-col-reverse gap-3 sm:flex-row sm:justify-between ${step === 1 ? 'max-sm:hidden' : ''}`}>
-                <button type="button" disabled={step === 0 || busy} onClick={() => goToStep(step - 1, 'back')} className="btn-ghost-teal disabled:invisible">
-                  <ArrowLeft size={17} /> Back
-                </button>
-                {step < 3 ? (
-                  <button type="button" onClick={next} disabled={step === 2 && outsideArea} className="btn-primary flex items-center justify-center gap-2 disabled:cursor-not-allowed disabled:opacity-50">
-                    Continue <ArrowRight size={17} />
-                  </button>
-                ) : (
-                  <button type="button" onClick={submit} disabled={busy} className="btn-primary flex items-center justify-center gap-2">
-                    {busy ? <><Loader2 size={17} className="animate-spin" /> Saving…</> : <>Confirm booking <ArrowRight size={17} /></>}
-                  </button>
-                )}
-              </div>
               </div>
             </div>
 
@@ -1133,7 +1125,11 @@ function CompactExtraRow({
   last,
 }) {
   const Icon = EXTRA_ICONS[service.animation] || Sparkles;
-  const priceLabel = addOnPriceLabel(service.id, '');
+  const rawPriceLabel = addOnPriceLabel(service.id, '');
+  const priceLabel =
+    service.id === 'water-spots'
+      ? 'Inspection'
+      : rawPriceLabel;
 
   return (
     <div
@@ -1151,7 +1147,7 @@ function CompactExtraRow({
             onToggle();
           }
         }}
-        className="flex min-h-[64px] cursor-pointer items-center gap-3 px-3 py-2.5 sm:px-4"
+        className="flex min-h-[58px] cursor-pointer items-center gap-2.5 px-3 py-2 sm:px-4"
         aria-pressed={selected}
       >
         <span
@@ -1165,7 +1161,7 @@ function CompactExtraRow({
         </span>
 
         <div className="min-w-0 flex-1">
-          <strong className="font-body block truncate text-sm text-[var(--teal-900)]">
+          <strong className="font-body block text-[13px] font-extrabold leading-4 text-[var(--teal-900)] sm:text-sm">
             {service.name}
           </strong>
           {selected && (
@@ -1175,7 +1171,7 @@ function CompactExtraRow({
           )}
         </div>
 
-        <span className="font-display max-w-[120px] shrink-0 text-right text-sm leading-4 text-[var(--terracotta-600)] sm:text-base">
+        <span className="font-display max-w-[92px] shrink-0 text-right text-[13px] leading-4 text-[var(--terracotta-600)] sm:max-w-[120px] sm:text-base">
           {priceLabel}
         </span>
 
@@ -1185,7 +1181,7 @@ function CompactExtraRow({
             event.stopPropagation();
             onInfo();
           }}
-          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full border transition ${
+          className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full border transition ${
             expanded
               ? 'border-[var(--teal-700)] bg-[var(--teal-700)] text-white'
               : 'border-[var(--teal-100)] bg-white text-[var(--teal-700)]'
@@ -1193,7 +1189,7 @@ function CompactExtraRow({
           aria-label={`${expanded ? 'Hide' : 'Show'} details for ${service.name}`}
           aria-expanded={expanded}
         >
-          <Info size={17} />
+          <Info size={16} />
         </button>
       </div>
 
