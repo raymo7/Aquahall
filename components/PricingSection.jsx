@@ -86,7 +86,7 @@ export default function PricingSection() {
 
                 <button
                   type="button"
-                  onClick={() => go('/book')}
+                  onClick={() => go('/book?service=complete&vehicle=heavy')}
                   className="group relative overflow-hidden rounded-2xl border-2 border-[var(--gold-400)] bg-[linear-gradient(120deg,var(--teal-900),var(--teal-700))] p-4 text-left shadow-[0_10px_26px_rgba(18,49,48,.18)] transition hover:-translate-y-0.5 hover:shadow-[0_14px_30px_rgba(18,49,48,.25)]"
                 >
                   <span
@@ -107,7 +107,7 @@ export default function PricingSection() {
                       Truck, bus or machinery
                     </span>
                     <strong className="font-display whitespace-nowrap text-2xl text-[var(--gold-400)]">
-                      ₹{HEAVY_VEHICLE_PRICE}
+                      From ₹{HEAVY_VEHICLE_PRICE}
                     </strong>
                   </div>
 

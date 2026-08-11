@@ -25,12 +25,15 @@ import {
 import {
   CORE_SERVICES,
   HEAVY_VEHICLE_PRICE,
+  HEAVY_VEHICLE_TYPES,
   PACKAGES,
   VEHICLE_TYPES,
   BOOKING_FEE,
   addOnPriceLabel,
   categoryForVehicle,
   priceForPackage,
+  priceForVehicle,
+  heavyVehicleLabel,
   resolveBooking,
 } from '../lib/pricing';
 import PaymentPanel from './PaymentPanel';
@@ -38,7 +41,7 @@ import WashMotionDivider from './WashMotionDivider';
 import WaveDivider from './WaveDivider';
 
 const WHATSAPP_NUMBER = '918921167141';
-const STEPS = ['Vehicle', 'Service', 'Details', 'Payment'];
+const STEPS = ['Vehicle', 'Service', 'Extras', 'Location', 'Review'];
 const ICONS = {
   '5-Seater': Car,
   '7-Seater': Users,
@@ -175,7 +178,7 @@ export default function BookingForm() {
 
   const [form, setForm] = useState({
     vehicleCount: 1,
-    vehicles: [{ type: '5-Seater', model: '' }],
+    vehicles: [{ type: '5-Seater', model: '', heavyType: '' }],
     vehicleType: '5-Seater',
     vehicleModel: '',
     serviceType: 'complete',
@@ -230,6 +233,7 @@ export default function BookingForm() {
     const params = new URLSearchParams(window.location.search);
     const requested = Math.max(1, Math.min(4, Number(params.get('vehicles')) || 1));
     const requestedService = params.get('service');
+    const requestedVehicle = params.get('vehicle');
     const service = requestedService === 'vehicle-care' ? 'vehicle-care' : 'complete';
     const hasPreselectedService = requestedService === 'vehicle-care' || requestedService === 'complete';
     const group = params.get('offer') === 'group' || requested >= 3;
@@ -238,8 +242,11 @@ export default function BookingForm() {
     setForm((current) => {
       const vehicles = Array.from(
         { length: requested },
-        (_, index) => current.vehicles[index] || { type: '5-Seater', model: '' },
+        (_, index) => current.vehicles[index] || { type: '5-Seater', model: '', heavyType: '' },
       );
+      if (requestedVehicle === 'heavy' && vehicles[0]) {
+        vehicles[0] = { ...vehicles[0], type: 'Heavy Vehicle', heavyType: vehicles[0].heavyType || '6-wheel-tipper' };
+      }
       return {
         ...current,
         vehicleCount: requested,
@@ -352,7 +359,7 @@ export default function BookingForm() {
       const currentVehicles = Array.isArray(current.vehicles) ? current.vehicles : [];
       const vehicles = Array.from(
         { length: nextCount },
-        (_, index) => currentVehicles[index] || { type: '5-Seater', model: '' },
+        (_, index) => currentVehicles[index] || { type: '5-Seater', model: '', heavyType: '' },
       );
 
       const nextHasHeavy = vehicles.some(
@@ -380,9 +387,17 @@ export default function BookingForm() {
         ? current.vehicles
         : [{ type: current.vehicleType || '5-Seater', model: current.vehicleModel || '' }];
 
-      const vehicles = currentVehicles.map((vehicle, vehicleIndex) =>
-        vehicleIndex === index ? { ...vehicle, [key]: value } : vehicle,
-      );
+      const vehicles = currentVehicles.map((vehicle, vehicleIndex) => {
+        if (vehicleIndex !== index) return vehicle;
+        const nextVehicle = { ...vehicle, [key]: value };
+        if (key === 'type' && value === 'Heavy Vehicle' && !nextVehicle.heavyType) {
+          nextVehicle.heavyType = '6-wheel-tipper';
+        }
+        if (key === 'type' && value !== 'Heavy Vehicle') {
+          nextVehicle.heavyType = '';
+        }
+        return nextVehicle;
+      });
 
       const nextHasHeavy = vehicles.some(
         (vehicle) => categoryForVehicle(vehicle.type) === 'heavy',
@@ -517,8 +532,13 @@ export default function BookingForm() {
     }, 80);
   }
 
+  function bookService(serviceType) {
+    update('serviceType', serviceType);
+    window.setTimeout(() => goToStep(2, 'forward'), 0);
+  }
+
   function next() {
-    if (step === 2 && !validateDetails()) return;
+    if (step === 3 && !validateDetails()) return;
     goToStep(step + 1, 'forward');
   }
 
@@ -547,7 +567,7 @@ export default function BookingForm() {
       setError(requestError.message);
       if (/slot/i.test(requestError.message)) {
         setForm((current) => ({ ...current, slotId: '' }));
-        goToStep(2, 'back');
+        goToStep(3, 'back');
       }
     } finally {
       setBusy(false);
@@ -568,540 +588,265 @@ export default function BookingForm() {
   const selectedSlot = slots.find((slot) => slot.id === form.slotId);
 
   const completeBaseTotal = vehicleList.reduce(
-    (sum, vehicle) => sum + priceForPackage(vehicle.type),
+    (sum, vehicle) => sum + priceForVehicle(vehicle),
     0,
   );
 
   const vehiclePriceBreakdown = vehicleList
-    .map((vehicle) => `${vehicle.type} ₹${priceForPackage(vehicle.type)}`)
+    .map((vehicle) => `${vehicle.type === 'Heavy Vehicle' ? heavyVehicleLabel(vehicle.heavyType) : vehicle.type} ₹${priceForVehicle(vehicle)}`)
     .join(' + ');
 
   const multipleVehicles = vehicleList.length > 1;
 
   return (
-    <section id="booking" className="relative overflow-hidden bg-[var(--cream-100)] px-4 py-16 sm:px-6 md:py-24">
-      <div className="mx-auto max-w-6xl">
-        <div className="mx-auto mb-9 max-w-2xl text-center">
-          <span className="font-label text-xs text-[var(--terracotta-600)]">BOOK YOUR SLOT</span>
-          <h2 className="font-display mt-3 text-3xl text-[var(--teal-900)] sm:text-4xl">
-            A little care goes a long way
-          </h2>
-          <p className="font-body mt-3 text-sm leading-6 text-[var(--ink-muted)]">
-            Choose a wash, an away-from-home care visit, or a group booking. We’ll match your location with an available route-aware slot.
-          </p>
-        </div>
-
-        <WashMotionDivider label="A smoother way to book your car care" />
-
-        <div ref={wizardRef} className="mx-auto scroll-mt-24 overflow-hidden rounded-[28px] border border-[var(--teal-100)] bg-white shadow-[0_24px_70px_rgba(18,49,48,0.12)]">
-          <div className="border-b border-[var(--teal-100)] px-5 py-5 sm:px-8">
-            <div className="grid grid-cols-4 gap-2">
+    <section id="booking" className="relative bg-[var(--cream-100)] px-3 pb-10 pt-3 sm:px-6 sm:pt-5">
+      <div className="mx-auto max-w-5xl">
+        <div ref={wizardRef} className="mx-auto overflow-visible rounded-[26px] border border-[var(--teal-100)] bg-white shadow-[0_18px_55px_rgba(18,49,48,0.10)]">
+          <div className="sticky top-0 z-20 rounded-t-[26px] border-b border-[var(--teal-100)] bg-white/95 px-3 py-3 backdrop-blur-md sm:px-6">
+            <div className="grid grid-cols-5 gap-1.5">
               {STEPS.map((label, index) => (
-                <div key={label}>
-                  <div className={`mb-2 h-1.5 rounded-full ${index <= step ? 'bg-[var(--terracotta-600)]' : 'bg-[var(--teal-100)]'}`} />
-                  <span className="font-body text-[11px] font-bold text-[var(--teal-900)]">{index + 1}. {label}</span>
+                <div key={label} className="min-w-0">
+                  <div className={`mb-1.5 h-1.5 rounded-full ${index <= step ? 'bg-[var(--terracotta-600)]' : 'bg-[var(--teal-100)]'}`} />
+                  <span className={`font-body block truncate text-center text-[9px] font-extrabold sm:text-[11px] ${index === step ? 'text-[var(--teal-900)]' : 'text-[var(--ink-muted)]'}`}>
+                    {index + 1}. {label}
+                  </span>
                 </div>
               ))}
             </div>
           </div>
 
-          <div className="grid lg:grid-cols-[1fr_320px]">
-            <div className="overflow-x-hidden p-5 sm:p-8 md:p-10">
+          <div className="grid lg:grid-cols-[1fr_290px]">
+            <div className="overflow-x-hidden p-4 pb-28 sm:p-7 sm:pb-28 md:p-8">
               <div
                 ref={stepTopRef}
                 key={`${step}-${slideDirection}`}
                 className={`booking-step-slide ${slideDirection === 'back' ? 'is-back' : 'is-forward'}`}
               >
-              {step === 0 && (
-                <div>
-                  <span className="font-label text-[10px] text-[var(--terracotta-600)]">YOUR VEHICLES</span>
-                  <h3 className="font-display mt-2 text-2xl text-[var(--teal-900)]">How many cars are we caring for?</h3>
-                  <p className="font-body mt-2 text-sm text-[var(--ink-muted)]">One car or a family fleet—tell us what is waiting at the location.</p>
-                  <div className="mt-5 grid grid-cols-4 gap-2">{[1,2,3,4].map((count)=><button key={count} type="button" onClick={()=>setVehicleCount(count)} className={`vehicle-count ${form.vehicleCount===count?'active':''}`}>{count}{count===4?'+':''}</button>)}</div>
-                  {form.vehicleCount >= 3 && <div className="booking-offer mt-5"><strong>Family & Friends saving unlocked</strong><p>Your group booking is eligible for 20–30% off when the cars are together at one location or within 3 km. We’ll confirm the exact saving before the service.</p><div className="mt-3 flex flex-wrap gap-2"><button type="button" onClick={()=>update('groupLocationMode','same')} className={`chip ${form.groupLocationMode==='same'?'active':''}`}>Same location</button><button type="button" onClick={()=>update('groupLocationMode','within-3km')} className={`chip ${form.groupLocationMode==='within-3km'?'active':''}`}>Within 3 km</button></div></div>}
-                  <div className="mt-6 space-y-4">{form.vehicles.map((vehicle,index)=><div key={index} className="vehicle-row"><div><span className="font-label text-[9px] text-[var(--terracotta-600)]">VEHICLE {index+1}</span><select className="field mt-2" value={vehicle.type} onChange={(e)=>updateVehicle(index,'type',e.target.value)}>{VEHICLE_TYPES.filter((item) => form.serviceType !== 'vehicle-care' || item.category !== 'heavy').map((item)=><option key={item.value} value={item.value}>{item.value} · {item.description}</option>)}</select></div><div><span className="font-body text-xs font-bold text-[var(--teal-900)]">Model (optional)</span><input className="field mt-2" value={vehicle.model || ''} onChange={(e)=>updateVehicle(index,'model',e.target.value)} placeholder="e.g. Baleno"/></div></div>)}</div>
-                </div>
-              )}
+                {step === 0 && (
+                  <div>
+                    <span className="font-label text-[10px] text-[var(--terracotta-600)]">YOUR VEHICLES</span>
+                    <h2 className="font-display mt-1 text-2xl text-[var(--teal-900)]">What are we washing?</h2>
+                    <p className="font-body mt-1 text-sm text-[var(--ink-muted)]">Choose the number of vehicles and their type. That’s all we need for this step.</p>
 
-              {step === 1 && (
-                <div>
-                  <span className="font-label text-[10px] text-[var(--terracotta-600)]">
-                    {lockedService ? 'YOUR SELECTED SERVICE' : 'CHOOSE YOUR CARE'}
-                  </span>
-                  <h3 className="font-display mt-2 text-2xl text-[var(--teal-900)]">
-                    {lockedService ? 'We kept the service you selected.' : 'What would you like us to do?'}
-                  </h3>
+                    <div className="mt-4 grid grid-cols-4 gap-2">
+                      {[1,2,3,4].map((count)=><button key={count} type="button" onClick={()=>setVehicleCount(count)} className={`vehicle-count ${form.vehicleCount===count?'active':''}`}>{count}{count===4?'+':''}</button>)}
+                    </div>
 
-                  {category === 'heavy' ? (
-                    <div className="mt-5 rounded-3xl bg-[var(--teal-900)] p-6 text-white">
-                      <h4 className="font-display text-3xl">Heavy Vehicle Wash</h4>
-                      <p className="font-body mt-2 text-sm text-[var(--teal-100)]">
-                        Dedicated cleaning for trucks, buses and machinery at your location.
-                      </p>
-                      <div className="mt-5 border-t border-white/15 pt-4">
-                        <span className="font-body text-xs text-[var(--teal-100)]">
-                          {multipleVehicles ? 'Estimated base total' : 'Base wash'}
-                        </span>
-                        <strong className="font-display mt-1 block text-3xl text-[var(--gold-400)]">
-                          ₹{completeBaseTotal}
-                        </strong>
-                        {multipleVehicles && (
-                          <p className="font-body mt-2 text-xs leading-5 text-[var(--teal-100)]">
-                            {vehiclePriceBreakdown}
-                          </p>
-                        )}
-                        <p className="font-body mt-2 text-[11px] text-[var(--teal-100)]">
-                          Add-ons are calculated separately.
-                        </p>
+                    {form.vehicleCount >= 3 && (
+                      <div className="booking-offer mt-4">
+                        <strong>🎉 3+ vehicle offer unlocked</strong>
+                        <p>Eligible for 20–30% off at the same location or within 3 km. Final saving is confirmed after review.</p>
+                        <div className="mt-2 flex flex-wrap gap-2">
+                          <button type="button" onClick={()=>update('groupLocationMode','same')} className={`chip ${form.groupLocationMode==='same'?'active':''}`}>Same location</button>
+                          <button type="button" onClick={()=>update('groupLocationMode','within-3km')} className={`chip ${form.groupLocationMode==='within-3km'?'active':''}`}>Within 3 km</button>
+                        </div>
                       </div>
-                    </div>
-                  ) : lockedService ? (
-                    <div className={`service-choice selected-service-summary mt-5 ${form.serviceType === 'vehicle-care' ? 'care active' : 'active'}`}>
-                      <span className="service-choice-icon">
-                        {form.serviceType === 'vehicle-care' ? <KeyRound size={24}/> : <Car size={24}/>}
-                      </span>
-                      <span className="font-label text-[9px]">
-                        {form.serviceType === 'vehicle-care' ? 'VEHICLE CARE VISIT' : 'COMPLETE CARE WASH'}
-                      </span>
-                      <strong>
-                        {form.serviceType === 'vehicle-care'
-                          ? 'Away from home? We’ll check in on your car.'
-                          : 'A fresh start, inside and out.'}
-                      </strong>
-                      <small>
-                        {form.serviceType === 'vehicle-care'
-                          ? 'Visual check, start-up, short run/drive up to 5 km where safe, wash + photo/video update.'
-                          : 'Foam Wash + Interior Detailing at your doorstep.'}
-                      </small>
-                      {form.serviceType === 'vehicle-care' ? (
-                        <>
-                          <b>₹1000 per vehicle</b>
-                          <span className="selected-service-note">
-                            {vehicleList.length} {vehicleList.length === 1 ? 'vehicle' : 'vehicles'} selected
-                          </span>
-                        </>
-                      ) : (
-                        <>
-                          <b>
-                            {multipleVehicles
-                              ? `Estimated base total ₹${completeBaseTotal}`
-                              : `From ₹${completeBaseTotal}`}
-                          </b>
+                    )}
 
-                          {multipleVehicles && (
-                            <small className="selected-service-breakdown">
-                              {vehiclePriceBreakdown}
-                            </small>
+                    <div className="mt-5 space-y-3">
+                      {form.vehicles.map((vehicle,index)=>(
+                        <div key={index} className="vehicle-row !gap-3">
+                          <div>
+                            <span className="font-label text-[9px] text-[var(--terracotta-600)]">VEHICLE {index+1}</span>
+                            <select className="field mt-2" value={vehicle.type} onChange={(e)=>updateVehicle(index,'type',e.target.value)}>
+                              {VEHICLE_TYPES.filter((item) => form.serviceType !== 'vehicle-care' || item.category !== 'heavy').map((item)=><option key={item.value} value={item.value}>{item.value} · {item.description}</option>)}
+                            </select>
+                          </div>
+
+                          {vehicle.type === 'Heavy Vehicle' && (
+                            <div>
+                              <span className="font-body text-xs font-bold text-[var(--teal-900)]">Heavy vehicle type</span>
+                              <select className="field mt-2" value={vehicle.heavyType || '6-wheel-tipper'} onChange={(e)=>updateVehicle(index,'heavyType',e.target.value)}>
+                                {HEAVY_VEHICLE_TYPES.map((item)=><option key={item.value} value={item.value}>{item.label} · ₹{item.price}</option>)}
+                              </select>
+                            </div>
                           )}
 
-                          <span className="selected-service-note">
-                            {vehicleList.length} {vehicleList.length === 1 ? 'vehicle' : 'vehicles'} selected
-                          </span>
-
-                          <small className="selected-service-price-note">
-                            Add-ons are calculated separately.
-                          </small>
-
-                          {form.vehicleCount >= 3 && (
-                            <small className="selected-service-offer-note">
-                              Group discount eligibility: 20–30% · final saving confirmed after review.
-                            </small>
-                          )}
-                        </>
-                      )}
+                          <div>
+                            <span className="font-body text-xs font-bold text-[var(--teal-900)]">Model (optional)</span>
+                            <input className="field mt-2" value={vehicle.model || ''} onChange={(e)=>updateVehicle(index,'model',e.target.value)} placeholder={vehicle.type === 'Heavy Vehicle' ? 'e.g. BharatBenz / CAT' : 'e.g. Baleno'}/>
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                  ) : (
+                  </div>
+                )}
+
+                {step === 1 && (
+                  <div>
+                    <span className="font-label text-[10px] text-[var(--terracotta-600)]">CHOOSE YOUR CARE</span>
+                    <h2 className="font-display mt-1 text-2xl text-[var(--teal-900)]">Pick one service to book.</h2>
+                    <p className="font-body mt-1 text-sm text-[var(--ink-muted)]">Tap the Book button on the service you want.</p>
+
                     <div className="mt-5 grid gap-4 md:grid-cols-2">
-                      <button type="button" onClick={()=>update('serviceType','complete')} className={`service-choice ${form.serviceType==='complete'?'active':''}`}>
+                      <div className="service-choice active">
                         <span className="service-choice-icon"><Car size={24}/></span>
-                        <span className="font-label text-[9px]">COMPLETE CARE WASH</span>
-                        <strong>A fresh start, inside and out.</strong>
-                        <small>Foam Wash + Interior Detailing at your doorstep.</small>
-                        <b>
-                          {multipleVehicles
-                            ? `Estimated base total ₹${completeBaseTotal}`
-                            : `From ₹${completeBaseTotal}`}
-                        </b>
-                        {multipleVehicles && (
-                          <small className="selected-service-breakdown">
-                            {vehiclePriceBreakdown}
-                          </small>
-                        )}
-                        <small className="selected-service-price-note">
-                          Add-ons calculated separately.
-                        </small>
-                      </button>
+                        <span className="font-label text-[9px]">{allHeavyVehicles ? 'HEAVY VEHICLE WASH' : 'COMPLETE CARE WASH'}</span>
+                        <strong>{allHeavyVehicles ? 'Heavy vehicle cleaning at your location.' : 'A fresh start, inside and out.'}</strong>
+                        <small>{allHeavyVehicles ? 'Pricing is based on the selected heavy vehicle type.' : 'Foam Wash + Interior Detailing at your doorstep.'}</small>
+                        <b>{multipleVehicles ? `Estimated base ₹${completeBaseTotal}` : `₹${completeBaseTotal}`}</b>
+                        {multipleVehicles && <small className="selected-service-breakdown">{vehiclePriceBreakdown}</small>}
+                        <button type="button" onClick={()=>bookService('complete')} className="btn-primary mt-4 flex w-full items-center justify-center gap-2">{allHeavyVehicles ? 'Book heavy wash' : 'Book complete care'} <ArrowRight size={16}/></button>
+                      </div>
+
                       {!hasHeavyVehicle && (
-                        <button type="button" onClick={()=>update('serviceType','vehicle-care')} className={`service-choice care ${form.serviceType==='vehicle-care'?'active':''}`}>
+                        <div className={`service-choice care ${form.serviceType==='vehicle-care'?'active':''}`}>
                           <span className="service-choice-icon"><KeyRound size={24}/></span>
                           <span className="font-label text-[9px]">VEHICLE CARE VISIT</span>
                           <strong>Away from home? We’ll check in on your car.</strong>
-                          <small>Visual check, start-up, short run/drive up to 5 km where safe, wash + photo/video update.</small>
+                          <small>Visual check, start-up, short run/drive where safe, wash + photo/video update.</small>
                           <b>₹1000 per vehicle</b>
-                        </button>
-                      )}
-                    </div>
-                  )}
-
-                  {form.serviceType === 'vehicle-care' && !hasHeavyVehicle && <div className="care-questions mt-6"><h4 className="font-display text-xl text-[var(--teal-900)]">A few details before we visit</h4><div className="mt-4 grid gap-4 sm:grid-cols-2"><Field label="Is the vehicle currently starting?"><select className="field" value={form.careStarting} onChange={(e)=>update('careStarting',e.target.value)}><option value="yes">Yes</option><option value="not-sure">Not sure</option><option value="no">No</option></select></Field><Field label="How long has it been unused?"><select className="field" value={form.unusedDuration} onChange={(e)=>update('unusedDuration',e.target.value)}><option value="less-than-1-month">Less than 1 month</option><option value="1-3-months">1–3 months</option><option value="3-plus-months">3+ months</option></select></Field></div><div className="mt-4"><Field label="Key handover / access instructions"><input className="field" value={form.keyInstructions} onChange={(e)=>update('keyInstructions',e.target.value)} placeholder="Who has the key, security/gate instructions, etc."/></Field></div><label className={`permission-card mt-4 ${fieldErrors.drivePermission?'error':''}`}><input type="checkbox" checked={form.drivePermission} onChange={(e)=>update('drivePermission',e.target.checked)}/><span><strong>I authorise Aqua Haul to take the vehicle for a short run/drive of up to 5 km.</strong><small>Only where the vehicle appears safe and legally permitted to be driven. Aqua Haul will contact me if there is any concern before proceeding.</small></span></label>{fieldErrors.drivePermission&&<p className="font-body mt-2 text-xs font-bold text-[var(--terracotta-600)]">{fieldErrors.drivePermission}</p>}</div>}
-
-                  <div className="mt-8">
-                    <span className="font-label text-[10px] text-[var(--terracotta-600)]">OPTIONAL EXTRAS</span>
-                    <h4 className="font-display mt-1 text-xl text-[var(--teal-900)]">Choose only what your vehicle needs.</h4>
-                    <p className="font-body mt-2 text-sm leading-6 text-[var(--ink-muted)]">
-                      Tap a row to select it. Tap the <strong>ⓘ</strong> button to read more without changing your selection.
-                    </p>
-                  </div>
-
-                  <div className="mt-4 overflow-hidden rounded-[24px] border border-[var(--teal-100)] bg-white">
-                    {extras.map((service, index) => (
-                      <CompactExtraRow
-                        key={service.id}
-                        service={service}
-                        selected={form.alacarte.includes(service.id)}
-                        expanded={expandedExtra === service.id}
-                        onToggle={() => toggle(service.id)}
-                        onInfo={() =>
-                          setExpandedExtra((current) =>
-                            current === service.id ? null : service.id,
-                          )
-                        }
-                        last={index === extras.length - 1}
-                      />
-                    ))}
-                  </div>
-
-                </div>
-              )}
-
-              {step === 2 && (
-                <div>
-                  <h3 className="font-display text-2xl text-[var(--teal-900)]">Details and available slot</h3>
-                  <div className="mt-6 grid gap-5 sm:grid-cols-2">
-                    <Field label="Full name" error={fieldErrors.name}>
-                      <input className="field" value={form.name} onChange={(event) => update('name', event.target.value)} />
-                    </Field>
-                    <Field label="Phone" error={fieldErrors.phone}>
-                      <input
-                        className="field"
-                        inputMode="numeric"
-                        maxLength={15}
-                        value={form.phone}
-                        onChange={(event) => update('phone', event.target.value.replace(/\D/g, ''))}
-                        placeholder="Exact 10-digit number"
-                      />
-                    </Field>
-                    <Field label="Email (optional)" error={fieldErrors.email}>
-                      <input className="field" type="email" value={form.email} onChange={(event) => update('email', event.target.value)} />
-                    </Field>
-                    <div className="rounded-2xl bg-[var(--cream-100)] p-4 text-sm text-[var(--ink-muted)]"><strong className="text-[var(--teal-900)]">{form.vehicleCount} vehicle{form.vehicleCount>1?'s':''}</strong><br/>{form.groupOffer ? 'Group offer eligibility will be confirmed with your final service price.' : 'Vehicle details saved from the first step.'}</div>
-                  </div>
-
-                  <div className="mt-5">
-                    <Field label="House address" error={fieldErrors.address}>
-                      <textarea
-                        className="field"
-                        rows={2}
-                        value={form.address}
-                        onChange={(event) => update('address', event.target.value)}
-                        placeholder="House name, building, road and locality"
-                      />
-                    </Field>
-                  </div>
-
-                  <div className="relative mt-5">
-                    <Field label="Place / map location" error={fieldErrors.mapAddress}>
-                      <input
-                        className="field pr-12"
-                        value={form.mapAddress}
-                        onChange={(event) => {
-                          setFieldErrors((current) => ({ ...current, mapAddress: '' }));
-                          setError('');
-                          setForm((current) => ({
-                            ...current,
-                            mapAddress: event.target.value,
-                            placeId: '',
-                            latitude: null,
-                            longitude: null,
-                            slotId: '',
-                          }));
-                        }}
-                        placeholder="Search a road, junction, church, shop or nearby place"
-                      />
-                    </Field>
-                    {addressBusy && <Loader2 className="absolute right-4 top-10 animate-spin" size={18} />}
-                    {!!suggestions.length && (
-                      <div className="absolute z-20 mt-2 w-full overflow-hidden rounded-2xl border bg-white shadow-xl">
-                        {suggestions.map((item) => (
-                          <button key={item.placeId} type="button" onClick={() => chooseAddress(item)} className="block w-full border-b px-4 py-3 text-left font-body text-sm hover:bg-[var(--cream-100)]">
-                            <strong>{item.mainText}</strong>
-                            <span className="block text-xs text-[var(--ink-muted)]">{item.secondaryText}</span>
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                    <button
-                      type="button"
-                      onClick={useCurrentLocation}
-                      disabled={addressBusy}
-                      className="btn-ghost-teal mt-3 inline-flex items-center gap-2 text-sm disabled:opacity-60"
-                    >
-                      <LocateFixed size={16} /> Use my current location
-                    </button>
-                    {Number.isFinite(Number(form.latitude)) && Number.isFinite(Number(form.longitude)) && (
-                      <a
-                        href={mapsLink(form.latitude, form.longitude)}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="font-body ml-3 inline-block text-xs font-bold text-[var(--teal-700)] underline"
-                      >
-                        Preview on Google Maps
-                      </a>
-                    )}
-                  </div>
-
-                  <div className="mt-5">
-                    <Field label="Landmark / directions (optional)">
-                      <input
-                        className="field"
-                        value={form.landmark}
-                        onChange={(event) => update('landmark', event.target.value)}
-                        placeholder="Near a church, junction, shop, gate or other clear landmark"
-                      />
-                    </Field>
-                  </div>
-
-                  <div className="mt-5 grid gap-5 sm:grid-cols-2">
-                    <Field label="Date" error={fieldErrors.date}>
-                      <input className="field" type="date" min={new Date().toISOString().slice(0, 10)} value={form.date} onChange={(event) => update('date', event.target.value)} />
-                    </Field>
-                    <Field label="Service notes (optional)">
-                      <input className="field" placeholder="Vehicle condition, gate instructions or service requests" value={form.notes} onChange={(event) => update('notes', event.target.value)} />
-                    </Field>
-                  </div>
-
-                  {distance != null && !outsideArea && (
-                    <p className="font-body mt-4 rounded-xl bg-[var(--teal-100)] px-4 py-3 text-sm text-[var(--teal-900)]">
-                      Approximate road distance from Kuravilangadu: <strong>{distance} km</strong>
-                      {distance > 15 ? ' · Extended service area; final confirmation may be required.' : ''}
-                    </p>
-                  )}
-
-                  {outsideArea ? (
-                    <div className="mt-6 rounded-3xl border-2 border-[var(--terracotta-500)] bg-[var(--terracotta-100)] p-5 sm:p-6">
-                      <h4 className="font-display text-xl text-[var(--teal-900)]">Check service availability on WhatsApp</h4>
-                      <p className="font-body mt-2 text-sm leading-6 text-[var(--ink)]">
-                        This address is approximately <strong>{distance} km</strong> from Kuravilangadu and is outside our normal online booking area. We may still be able to serve it depending on the day’s route.
-                      </p>
-                      <a
-                        href={enquiryWhatsApp({ form, resolved, distance })}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="btn-primary mt-4 flex w-full items-center justify-center gap-2 text-center"
-                      >
-                        <MessageCircle size={18} /> Check availability on WhatsApp
-                      </a>
-                    </div>
-                  ) : (
-                    <>
-                      <h4 className="font-display mt-6 text-xl text-[var(--teal-900)]">Available slots</h4>
-                      {availabilityBusy ? (
-                        <p className="font-body mt-3 flex items-center gap-2 text-sm"><Loader2 size={16} className="animate-spin" /> Checking route and availability…</p>
-                      ) : (
-                        <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                          {slots.map((slot) => (
-                            <div key={slot.id} className={`rounded-2xl border-2 p-4 ${form.slotId === slot.id ? 'border-[var(--teal-700)] bg-[var(--teal-100)]' : slot.available ? 'border-[var(--teal-100)] bg-white' : 'border-gray-200 bg-gray-100 text-gray-400'}`}>
-                              <button
-                                type="button"
-                                disabled={!slot.available}
-                                onClick={() => update('slotId', slot.id)}
-                                className={`block w-full text-left ${slot.available ? '' : 'cursor-not-allowed'}`}
-                              >
-                                <strong className="font-body block text-sm">{slot.label}</strong>
-                                <span className="font-body mt-1 block text-xs">{slot.available ? 'Available' : slot.reason}</span>
-                              </button>
-                              {slot.whatsappOnly && (
-                                <a
-                                  href={enquiryWhatsApp({ form, resolved, distance, requestedSlot: slot })}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  className="font-body mt-3 inline-flex items-center gap-1.5 text-xs font-bold text-[var(--terracotta-600)] underline"
-                                >
-                                  <MessageCircle size={14} /> Check this slot on WhatsApp
-                                </a>
-                              )}
-                            </div>
-                          ))}
+                          <button type="button" onClick={()=>bookService('vehicle-care')} className="btn-primary mt-4 flex w-full items-center justify-center gap-2">Book vehicle care <ArrowRight size={16}/></button>
                         </div>
                       )}
-                      {fieldErrors.slotId && <p className="font-body mt-3 text-xs font-bold text-[var(--terracotta-600)]">{fieldErrors.slotId}</p>}
-                    </>
-                  )}
-                </div>
-              )}
-
-              {step === 3 && (
-                <div>
-                  <h3 className="font-display text-2xl text-[var(--teal-900)]">Booking payment</h3>
-                  <div className="mt-6 grid gap-4 sm:grid-cols-2">
-                    <button type="button" onClick={() => update('paymentMethod', 'onsite')} className={`pick-card p-6 text-left ${form.paymentMethod === 'onsite' ? 'active' : ''}`}>
-                      <strong className="font-display text-xl">Pay Onsite</strong>
-                      <p className="font-body mt-2 text-sm text-[var(--ink-muted)]">Pay after the service by cash or UPI.</p>
-                    </button>
-                    <button type="button" onClick={() => update('paymentMethod', 'advance')} className={`pick-card p-6 text-left ${form.paymentMethod === 'advance' ? 'active' : ''}`}>
-                      <strong className="font-display text-xl">₹{BOOKING_FEE} Booking Fee</strong>
-                      <p className="font-body mt-2 text-sm text-[var(--ink-muted)]">Reserve your slot with a fixed ₹{BOOKING_FEE} fee. The remaining amount is paid after service.</p>
-                    </button>
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
 
-              {error && !outsideArea && (
-                <p className="font-body mt-5 rounded-xl bg-[var(--terracotta-100)] px-4 py-3 text-sm font-bold text-[var(--terracotta-600)]">{error}</p>
-              )}
+                {step === 2 && (
+                  <div>
+                    <span className="font-label text-[10px] text-[var(--terracotta-600)]">OPTIONAL EXTRAS</span>
+                    <h2 className="font-display mt-1 text-2xl text-[var(--teal-900)]">Add only what you need.</h2>
+                    <p className="font-body mt-1 text-sm leading-6 text-[var(--ink-muted)]">All extras are optional. Tap a row to select it; ⓘ only opens the description.</p>
 
-              {step === 1 ? (
-                <div className="mt-5">
-                  <div className="mb-2.5 flex items-center justify-between gap-3 px-1">
-                    <span className="font-body text-[11px] text-[var(--ink-muted)]">
-                      {form.alacarte.length
-                        ? `${form.alacarte.length} extra${form.alacarte.length > 1 ? 's' : ''} selected`
-                        : 'Extras are optional'}
-                    </span>
-                    <span className="font-body text-[11px] font-bold text-[var(--teal-900)]">
-                      Est. ₹{resolved.amount}{resolved.variablePricing ? '+' : ''}
-                    </span>
+                    <div className="mt-4 overflow-hidden rounded-[22px] border border-[var(--teal-100)] bg-white">
+                      {extras.map((service, index) => (
+                        <CompactExtraRow
+                          key={service.id}
+                          service={service}
+                          selected={form.alacarte.includes(service.id)}
+                          expanded={expandedExtra === service.id}
+                          onToggle={() => toggle(service.id)}
+                          onInfo={() => setExpandedExtra((current) => current === service.id ? null : service.id)}
+                          last={index === extras.length - 1}
+                        />
+                      ))}
+                    </div>
+                    <p className="font-body mt-3 text-xs text-[var(--ink-muted)]">Condition-based extras are confirmed before work begins.</p>
                   </div>
+                )}
 
-                  <div className="grid grid-cols-[54px_1fr] gap-2.5 sm:flex sm:justify-between">
-                    <button
-                      type="button"
-                      onClick={() => goToStep(0, 'back')}
-                      className="btn-ghost-teal flex min-h-[50px] items-center justify-center !px-0 sm:px-5"
-                      aria-label="Back to vehicle selection"
-                    >
-                      <ArrowLeft size={18} />
-                      <span className="hidden sm:inline">Back</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={next}
-                      className="btn-primary flex min-h-[50px] items-center justify-center gap-2"
-                    >
-                      Continue <ArrowRight size={17} />
-                    </button>
+                {step === 3 && (
+                  <div>
+                    <span className="font-label text-[10px] text-[var(--terracotta-600)]">LOCATION & TIME</span>
+                    <h2 className="font-display mt-1 text-2xl text-[var(--teal-900)]">Where and when should we come?</h2>
+
+                    {form.serviceType === 'vehicle-care' && !hasHeavyVehicle && (
+                      <div className="care-questions mt-5 rounded-3xl bg-[var(--cream-100)] p-4 sm:p-5">
+                        <h4 className="font-display text-xl text-[var(--teal-900)]">Vehicle care details</h4>
+                        <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                          <Field label="Is the vehicle currently starting?"><select className="field" value={form.careStarting} onChange={(e)=>update('careStarting',e.target.value)}><option value="yes">Yes</option><option value="not-sure">Not sure</option><option value="no">No</option></select></Field>
+                          <Field label="How long has it been unused?"><select className="field" value={form.unusedDuration} onChange={(e)=>update('unusedDuration',e.target.value)}><option value="less-than-1-month">Less than 1 month</option><option value="1-3-months">1–3 months</option><option value="3-plus-months">3+ months</option></select></Field>
+                        </div>
+                        <div className="mt-3"><Field label="Key / access instructions"><input className="field" value={form.keyInstructions} onChange={(e)=>update('keyInstructions',e.target.value)} placeholder="Who has the key, gate/security instructions, etc."/></Field></div>
+                        <label className={`permission-card mt-3 ${fieldErrors.drivePermission?'error':''}`}><input type="checkbox" checked={form.drivePermission} onChange={(e)=>update('drivePermission',e.target.checked)}/><span><strong>I authorise a short run/drive of up to 5 km.</strong><small>Only where safe and legally permitted.</small></span></label>
+                        {fieldErrors.drivePermission&&<p className="font-body mt-2 text-xs font-bold text-[var(--terracotta-600)]">{fieldErrors.drivePermission}</p>}
+                      </div>
+                    )}
+
+                    <div className="mt-5 grid gap-4 sm:grid-cols-2">
+                      <Field label="Full name" error={fieldErrors.name}><input className="field" value={form.name} onChange={(event) => update('name', event.target.value)} /></Field>
+                      <Field label="Phone" error={fieldErrors.phone}><input className="field" inputMode="numeric" maxLength={15} value={form.phone} onChange={(event) => update('phone', event.target.value.replace(/\D/g, ''))} placeholder="Exact 10-digit number" /></Field>
+                      <Field label="Email (optional)" error={fieldErrors.email}><input className="field" type="email" value={form.email} onChange={(event) => update('email', event.target.value)} /></Field>
+                    </div>
+
+                    <div className="mt-4"><Field label="House address" error={fieldErrors.address}><textarea className="field" rows={2} value={form.address} onChange={(event) => update('address', event.target.value)} placeholder="House name, building, road and locality" /></Field></div>
+
+                    <div className="relative mt-4">
+                      <Field label="Place / map location" error={fieldErrors.mapAddress}>
+                        <input className="field pr-12" value={form.mapAddress} onChange={(event) => {setFieldErrors((current) => ({ ...current, mapAddress: '' }));setError('');setForm((current) => ({...current,mapAddress: event.target.value,placeId: '',latitude: null,longitude: null,slotId: ''}));}} placeholder="Search a road, junction, church, shop or nearby place" />
+                      </Field>
+                      {addressBusy && <Loader2 className="absolute right-4 top-10 animate-spin" size={18} />}
+                      {!!suggestions.length && <div className="absolute z-30 mt-2 w-full overflow-hidden rounded-2xl border bg-white shadow-xl">{suggestions.map((item) => <button key={item.placeId} type="button" onClick={() => chooseAddress(item)} className="block w-full border-b px-4 py-3 text-left font-body text-sm hover:bg-[var(--cream-100)]"><strong>{item.mainText}</strong><span className="block text-xs text-[var(--ink-muted)]">{item.secondaryText}</span></button>)}</div>}
+                      <button type="button" onClick={useCurrentLocation} disabled={addressBusy} className="btn-ghost-teal mt-2 inline-flex items-center gap-2 text-sm disabled:opacity-60"><LocateFixed size={16} /> Use my current location</button>
+                      {Number.isFinite(Number(form.latitude)) && Number.isFinite(Number(form.longitude)) && <a href={mapsLink(form.latitude, form.longitude)} target="_blank" rel="noreferrer" className="font-body ml-3 inline-block text-xs font-bold text-[var(--teal-700)] underline">Preview map</a>}
+                    </div>
+
+                    <div className="mt-4"><Field label="Landmark / directions (optional)"><input className="field" value={form.landmark} onChange={(event) => update('landmark', event.target.value)} placeholder="Near a church, junction, shop or gate" /></Field></div>
+                    <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                      <Field label="Date" error={fieldErrors.date}><input className="field" type="date" min={new Date().toISOString().slice(0, 10)} value={form.date} onChange={(event) => update('date', event.target.value)} /></Field>
+                      <Field label="Notes (optional)"><input className="field" value={form.notes} onChange={(event) => update('notes', event.target.value)} placeholder="Gate instructions or special requests" /></Field>
+                    </div>
+
+                    {distance != null && !outsideArea && <p className="font-body mt-4 rounded-xl bg-[var(--teal-100)] px-4 py-3 text-sm text-[var(--teal-900)]">Approximate road distance: <strong>{distance} km</strong>{distance > 15 ? ' · Extended service area' : ''}</p>}
+
+                    {outsideArea ? (
+                      <div className="mt-5 rounded-3xl border-2 border-[var(--terracotta-500)] bg-[var(--terracotta-100)] p-5">
+                        <h4 className="font-display text-xl text-[var(--teal-900)]">Check availability on WhatsApp</h4>
+                        <p className="font-body mt-2 text-sm">This location is about <strong>{distance} km</strong> from Kuravilangadu. We may still be able to serve it depending on the route.</p>
+                        <a href={enquiryWhatsApp({ form, resolved, distance })} target="_blank" rel="noreferrer" className="btn-primary mt-4 flex w-full items-center justify-center gap-2"><MessageCircle size={18}/> Check on WhatsApp</a>
+                      </div>
+                    ) : (
+                      <>
+                        <h4 className="font-display mt-5 text-xl text-[var(--teal-900)]">Available slots</h4>
+                        {availabilityBusy ? <p className="font-body mt-3 flex items-center gap-2 text-sm"><Loader2 size={16} className="animate-spin" /> Checking route and availability…</p> : <div className="mt-3 grid gap-2 sm:grid-cols-2">{slots.map((slot) => <div key={slot.id} className={`rounded-2xl border-2 p-3 ${form.slotId === slot.id ? 'border-[var(--teal-700)] bg-[var(--teal-100)]' : slot.available ? 'border-[var(--teal-100)] bg-white' : 'border-gray-200 bg-gray-100 text-gray-400'}`}><button type="button" disabled={!slot.available} onClick={() => update('slotId', slot.id)} className={`block w-full text-left ${slot.available ? '' : 'cursor-not-allowed'}`}><strong className="font-body block text-sm">{slot.label}</strong><span className="font-body mt-1 block text-xs">{slot.available ? 'Available' : slot.reason}</span></button>{slot.whatsappOnly && <a href={enquiryWhatsApp({ form, resolved, distance, requestedSlot: slot })} target="_blank" rel="noreferrer" className="font-body mt-2 inline-flex items-center gap-1 text-xs font-bold text-[var(--terracotta-600)] underline"><MessageCircle size={14}/> Check on WhatsApp</a>}</div>)}</div>}
+                        {fieldErrors.slotId && <p className="font-body mt-2 text-xs font-bold text-[var(--terracotta-600)]">{fieldErrors.slotId}</p>}
+                      </>
+                    )}
                   </div>
-                </div>
-              ) : (
-                <div className="mt-8 flex flex-col-reverse gap-3 sm:flex-row sm:justify-between">
-                  <button type="button" disabled={step === 0 || busy} onClick={() => goToStep(step - 1, 'back')} className="btn-ghost-teal disabled:invisible">
-                    <ArrowLeft size={17} /> Back
-                  </button>
-                  {step < 3 ? (
-                    <button type="button" onClick={next} disabled={step === 2 && outsideArea} className="btn-primary flex items-center justify-center gap-2 disabled:cursor-not-allowed disabled:opacity-50">
-                      Continue <ArrowRight size={17} />
-                    </button>
-                  ) : (
-                    <button type="button" onClick={submit} disabled={busy} className="btn-primary flex items-center justify-center gap-2">
-                      {busy ? <><Loader2 size={17} className="animate-spin" /> Saving…</> : <>Confirm booking <ArrowRight size={17} /></>}
-                    </button>
-                  )}
-                </div>
-              )}
+                )}
+
+                {step === 4 && (
+                  <div>
+                    <span className="font-label text-[10px] text-[var(--terracotta-600)]">REVIEW & BOOK</span>
+                    <h2 className="font-display mt-1 text-2xl text-[var(--teal-900)]">Everything in one place.</h2>
+
+                    <div className="mt-4 rounded-3xl bg-[var(--teal-900)] p-5 text-white">
+                      <Summary label="Vehicles" value={`${form.vehicleCount} · ${vehicleList.map((v)=>v.type === 'Heavy Vehicle' ? heavyVehicleLabel(v.heavyType) : v.type).join(', ')}`} />
+                      <Summary label="Service" value={allHeavyVehicles ? 'Heavy Vehicle Wash' : form.serviceType === 'vehicle-care' ? 'Vehicle Care Visit' : hasHeavyVehicle ? 'Complete Care + Heavy Vehicle Wash' : 'Complete Care Wash'} />
+                      <Summary label="Extras" value={form.alacarte.length ? form.alacarte.map(serviceName).join(', ') : 'None'} />
+                      <Summary label="Slot" value={selectedSlot?.label || 'Not selected'} />
+                      <div className="mt-5 border-t border-white/15 pt-4"><span className="font-body text-xs text-[var(--teal-100)]">Estimated service total</span><strong className="font-display mt-1 block text-4xl">₹{resolved.amount}{resolved.variablePricing ? '+' : ''}</strong>{resolved.variablePricing && <p className="mt-1 text-xs text-[var(--teal-100)]">Condition-based extras will be confirmed before work.</p>}{form.groupOffer && <p className="mt-2 rounded-xl bg-white/10 p-2 text-xs">20–30% group saving eligible · final discount confirmed by Aqua Haul.</p>}</div>
+                    </div>
+
+                    <h3 className="font-display mt-5 text-xl text-[var(--teal-900)]">How would you like to reserve?</h3>
+                    <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                      <button type="button" onClick={() => update('paymentMethod', 'onsite')} className={`pick-card p-5 text-left ${form.paymentMethod === 'onsite' ? 'active' : ''}`}><strong className="font-display text-lg">Pay Onsite</strong><p className="font-body mt-1 text-xs text-[var(--ink-muted)]">Pay after service by cash or UPI.</p></button>
+                      <button type="button" onClick={() => update('paymentMethod', 'advance')} className={`pick-card p-5 text-left ${form.paymentMethod === 'advance' ? 'active' : ''}`}><strong className="font-display text-lg">₹{BOOKING_FEE} Booking Fee</strong><p className="font-body mt-1 text-xs text-[var(--ink-muted)]">Reserve the slot now; pay the balance after service.</p></button>
+                    </div>
+                  </div>
+                )}
+
+                {error && !outsideArea && <p className="font-body mt-4 rounded-xl bg-[var(--terracotta-100)] px-4 py-3 text-sm font-bold text-[var(--terracotta-600)]">{error}</p>}
               </div>
+
+              {step !== 1 && (
+                <div className="sticky bottom-[82px] z-40 mt-5 rounded-[20px] border border-[var(--teal-100)] bg-white/95 p-2 shadow-[0_-8px_28px_rgba(18,49,48,.14)] backdrop-blur-md sm:bottom-3">
+                  <div className="mb-1.5 flex items-center justify-between px-2 text-[11px]">
+                    <span className="font-body text-[var(--ink-muted)]">{step === 0 ? `${form.vehicleCount} vehicle${form.vehicleCount>1?'s':''}` : step === 2 ? `${form.alacarte.length} extra${form.alacarte.length===1?'':'s'} selected` : selectedSlot?.label || 'Complete this step'}</span>
+                    <strong className="font-body text-[var(--teal-900)]">Est. ₹{resolved.amount}{resolved.variablePricing?'+':''}</strong>
+                  </div>
+                  <div className={`grid ${step > 0 ? 'grid-cols-[52px_1fr]' : 'grid-cols-1'} gap-2`}>
+                    {step > 0 && <button type="button" onClick={() => goToStep(step - 1, 'back')} className="btn-ghost-teal flex min-h-[48px] items-center justify-center !px-0" aria-label="Back"><ArrowLeft size={18}/></button>}
+                    {step < 4 ? <button type="button" onClick={next} disabled={step === 3 && outsideArea} className="btn-primary flex min-h-[48px] items-center justify-center gap-2 disabled:opacity-50">Continue <ArrowRight size={17}/></button> : <button type="button" onClick={submit} disabled={busy} className="btn-primary flex min-h-[48px] items-center justify-center gap-2">{busy ? <><Loader2 size={17} className="animate-spin"/> Saving…</> : <>Confirm booking <ArrowRight size={17}/></>}</button>}
+                  </div>
+                </div>
+              )}
             </div>
 
-            <aside className="bg-[var(--teal-900)] p-6 text-white lg:p-8">
+            <aside className="hidden bg-[var(--teal-900)] p-6 text-white lg:block">
               <span className="font-label text-[10px] text-[var(--gold-400)]">YOUR BOOKING</span>
-              <h4 className="font-display mt-3 text-2xl">Estimated price</h4>
-              <div className="font-body mt-6 space-y-3 text-sm">
-                <Summary label="Vehicles" value={`${form.vehicleCount} · ${form.vehicles.map((v)=>v.type).join(", ")}`} />
-                <Summary label="Service" value={allHeavyVehicles ? 'Heavy Vehicle Wash' : form.serviceType === 'vehicle-care' ? 'Vehicle Care Visit' : hasHeavyVehicle ? 'Complete Care Wash + Heavy Vehicle Wash' : 'Complete Care Wash'} />
+              <h4 className="font-display mt-2 text-2xl">Live estimate</h4>
+              <div className="font-body mt-5 space-y-3 text-sm">
+                <Summary label="Vehicles" value={`${form.vehicleCount} · ${vehicleList.map((v)=>v.type === 'Heavy Vehicle' ? heavyVehicleLabel(v.heavyType) : v.type).join(', ')}`} />
+                <Summary label="Service" value={allHeavyVehicles ? 'Heavy Vehicle Wash' : form.serviceType === 'vehicle-care' ? 'Vehicle Care Visit' : hasHeavyVehicle ? 'Complete + Heavy' : 'Complete Care Wash'} />
                 <Summary label="Extras" value={form.alacarte.length ? form.alacarte.map(serviceName).join(', ') : 'None'} />
-                <Summary label="Slot" value={selectedSlot?.label || (outsideArea ? 'WhatsApp enquiry' : 'Not selected')} />
-                <Summary label="Payment" value={form.paymentMethod === 'advance' ? `₹${BOOKING_FEE} booking fee` : 'Pay Onsite'} />
+                <Summary label="Slot" value={selectedSlot?.label || 'Not selected'} />
               </div>
-              <div className="mt-8 border-t border-white/15 pt-6">
-                <span className="font-body text-xs text-[var(--teal-100)]">Estimated service total</span>
-                <strong className="font-display mt-1 block text-4xl">₹{resolved.amount}{resolved.variablePricing ? '+' : ''}</strong>
-                {resolved.variablePricing && <p className="font-body mt-2 text-xs leading-5 text-[var(--teal-100)]">Condition-based extras are not fully included in this estimate. We’ll confirm their price before work begins.</p>}
-                {form.groupOffer && <p className="font-body mt-2 rounded-xl bg-white/10 p-3 text-xs leading-5 text-[var(--teal-100)]">20–30% group saving eligible · final discount confirmed by Aqua Haul.</p>}
-              </div>
+              <div className="mt-6 border-t border-white/15 pt-5"><span className="text-xs text-[var(--teal-100)]">Estimated total</span><strong className="font-display mt-1 block text-4xl">₹{resolved.amount}{resolved.variablePricing?'+':''}</strong></div>
             </aside>
           </div>
         </div>
       </div>
+
       <style jsx>{`
-        .booking-step-slide {
-          width: 100%;
-          will-change: transform, opacity;
-          animation-duration: 260ms;
-          animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
-          animation-fill-mode: both;
-        }
-
-        .booking-step-slide.is-forward {
-          animation-name: bookingStepForward;
-        }
-
-        .booking-step-slide.is-back {
-          animation-name: bookingStepBack;
-        }
-
-        @keyframes bookingStepForward {
-          from {
-            opacity: 0;
-            transform: translate3d(34px, 0, 0);
-          }
-          to {
-            opacity: 1;
-            transform: translate3d(0, 0, 0);
-          }
-        }
-
-        @keyframes bookingStepBack {
-          from {
-            opacity: 0;
-            transform: translate3d(-34px, 0, 0);
-          }
-          to {
-            opacity: 1;
-            transform: translate3d(0, 0, 0);
-          }
-        }
-
-        @media (min-width: 768px) {
-          @keyframes bookingStepForward {
-            from {
-              opacity: 0;
-              transform: translate3d(46px, 0, 0);
-            }
-            to {
-              opacity: 1;
-              transform: translate3d(0, 0, 0);
-            }
-          }
-
-          @keyframes bookingStepBack {
-            from {
-              opacity: 0;
-              transform: translate3d(-46px, 0, 0);
-            }
-            to {
-              opacity: 1;
-              transform: translate3d(0, 0, 0);
-            }
-          }
-        }
-
-        @media (prefers-reduced-motion: reduce) {
-          .booking-step-slide {
-            animation: none !important;
-          }
-        }
+        .booking-step-slide { width:100%; will-change:transform,opacity; animation-duration:240ms; animation-timing-function:cubic-bezier(.22,1,.36,1); animation-fill-mode:both; }
+        .booking-step-slide.is-forward { animation-name:bookingStepForward; }
+        .booking-step-slide.is-back { animation-name:bookingStepBack; }
+        @keyframes bookingStepForward { from { opacity:0; transform:translate3d(26px,0,0); } to { opacity:1; transform:translate3d(0,0,0); } }
+        @keyframes bookingStepBack { from { opacity:0; transform:translate3d(-26px,0,0); } to { opacity:1; transform:translate3d(0,0,0); } }
+        @media (prefers-reduced-motion:reduce){ .booking-step-slide{animation:none!important;} }
       `}</style>
-
-      <WaveDivider color="var(--teal-700)" />
     </section>
   );
 }
