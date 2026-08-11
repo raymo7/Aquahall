@@ -26,52 +26,92 @@ import { HEAVY_VEHICLE_PRICE, VEHICLE_CARE_PRICE, priceForPackage } from '../lib
 export default function HomeSections() {
   return (
     <>
-      <section id="home" className="home-hero">
-        <div className="mx-auto grid max-w-6xl items-center gap-10 px-5 py-16 md:grid-cols-[1.05fr_.95fr] md:py-24">
-          <div>
-            <span className="font-label text-xs text-[var(--gold-400)]">
+      <section id="home" className="relative isolate overflow-hidden bg-[var(--teal-900)]">
+        {/* Priority hero image: visually blended, but still optimized by next/image. */}
+        <Image
+          src="/gallery/wash_photo.webp"
+          alt="Aqua Haul team providing a doorstep wash using the mobile service vehicle"
+          fill
+          priority
+          fetchPriority="high"
+          quality={80}
+          sizes="100vw"
+          className="object-cover object-[61%_center] md:object-center"
+        />
+
+        {/* Desktop/tablet: solid teal on the copy side, fading into the real photo. */}
+        <div
+          className="absolute inset-0 hidden md:block"
+          style={{
+            background:
+              'linear-gradient(90deg, rgba(8,42,40,.99) 0%, rgba(8,42,40,.97) 34%, rgba(8,42,40,.80) 51%, rgba(8,42,40,.34) 74%, rgba(8,42,40,.14) 100%)',
+          }}
+          aria-hidden="true"
+        />
+
+        {/* Mobile: keep the wash scene visible above/behind the hero, but create a
+            strong clean reading zone for the copy toward the lower half. */}
+        <div
+          className="absolute inset-0 md:hidden"
+          style={{
+            background:
+              'linear-gradient(180deg, rgba(8,42,40,.25) 0%, rgba(8,42,40,.46) 26%, rgba(8,42,40,.82) 52%, rgba(8,42,40,.98) 76%, rgba(8,42,40,1) 100%)',
+          }}
+          aria-hidden="true"
+        />
+        <div
+          className="absolute inset-0 md:hidden"
+          style={{
+            background:
+              'linear-gradient(90deg, rgba(8,42,40,.62) 0%, rgba(8,42,40,.18) 72%, rgba(8,42,40,.05) 100%)',
+          }}
+          aria-hidden="true"
+        />
+
+        <div className="relative mx-auto flex min-h-[760px] max-w-6xl items-end px-5 pb-12 pt-28 md:min-h-[620px] md:items-center md:py-20">
+          <div className="max-w-[610px]">
+            <span className="font-label text-[11px] tracking-[.15em] text-[var(--gold-400)] sm:text-xs">
               DOORSTEP VEHICLE CARE · KURAVILANGADU
             </span>
 
-            <h1 className="font-display mt-4 text-4xl leading-tight text-[var(--cream-50)] sm:text-5xl md:text-6xl">
+            <h1 className="font-display mt-4 max-w-[600px] text-[2.75rem] leading-[1.02] tracking-[-.035em] text-[var(--cream-50)] sm:text-[3.45rem] md:text-7xl">
               Care for your car, even when life keeps you away.
             </h1>
 
-            <p className="font-body mt-5 max-w-xl text-base leading-7 text-[var(--teal-100)] md:text-lg">
+            <p className="font-body mt-5 max-w-xl text-[15px] leading-7 text-[var(--teal-100)] sm:text-base md:text-lg">
               From a complete doorstep wash to a thoughtful vehicle-care visit,
               Aqua Haul keeps your car clean, checked and looked after at home.
             </p>
 
-            <div className="mt-8 flex flex-wrap gap-3">
-              <Link href="/book" className="btn-primary inline-flex items-center gap-2">
+            <div className="mt-7 grid max-w-[570px] grid-cols-2 gap-3">
+              <Link
+                href="/book"
+                className="btn-primary inline-flex min-h-[50px] items-center justify-center gap-2 px-4 text-center text-[15px] sm:text-base"
+              >
                 Book your care <ArrowRight size={18} />
               </Link>
-              <Link href="/services" className="btn-outline inline-flex items-center">
+              <Link
+                href="/services"
+                className="inline-flex min-h-[50px] items-center justify-center rounded-full border-2 border-[var(--cream-50)] bg-[rgba(8,42,40,.72)] px-4 text-center text-[15px] font-bold !text-[var(--cream-50)] shadow-[0_8px_24px_rgba(0,0,0,.2)] backdrop-blur-sm transition hover:bg-[var(--cream-50)] hover:!text-[var(--teal-900)] sm:text-base"
+              >
                 Explore services
               </Link>
             </div>
 
-            <div className="mt-7 flex flex-wrap gap-3 text-sm text-[var(--teal-100)]">
-              <span className="hero-pill"><Droplets size={15} /> Own water</span>
-              <span className="hero-pill"><Zap size={15} /> Own power</span>
-              <span className="hero-pill"><ShieldCheck size={15} /> Professional care</span>
+            <div className="mt-6 grid max-w-[610px] grid-cols-3 gap-2 text-[11px] text-[var(--teal-100)] sm:text-sm">
+              <span className="hero-pill justify-center whitespace-nowrap"><Droplets size={15} /> Own water</span>
+              <span className="hero-pill justify-center whitespace-nowrap"><Zap size={15} /> Own power</span>
+              <span className="hero-pill justify-center whitespace-nowrap"><ShieldCheck size={15} /> Professional care</span>
             </div>
 
             <div className="mt-6 max-w-xl border-l-2 border-[var(--gold-400)] pl-4">
-              <p className="font-display text-xl leading-relaxed text-[var(--cream-50)] sm:text-2xl" lang="ml">
+              <p className="font-display text-[1.15rem] leading-[1.65] text-[var(--cream-50)] sm:text-2xl" lang="ml">
                 വെള്ളം വേണ്ട, കറന്റ് വേണ്ട — Aqua Haul വന്നാൽ മതി! 💧⚡
               </p>
-              <p className="font-body mt-2 text-sm tracking-wide text-[var(--teal-100)]">
+              <p className="font-body mt-1.5 text-[13px] tracking-wide text-[var(--teal-100)] sm:text-sm">
                 Your car. Your doorstep. Our water. Our power.
               </p>
             </div>
-          </div>
-
-          <div className="home-hero-media">
-            <img
-              src="/gallery/wash_photo.webp"
-              alt="Aqua Haul team providing a doorstep car wash beside the mobile service vehicle"
-            />
           </div>
         </div>
       </section>
