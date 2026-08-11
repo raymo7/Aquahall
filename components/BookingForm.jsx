@@ -163,6 +163,7 @@ export default function BookingForm() {
   const [step, setStep] = useState(0);
   const [slideDirection, setSlideDirection] = useState('forward');
   const [expandedExtra, setExpandedExtra] = useState(null);
+  const [servicePreview, setServicePreview] = useState('complete');
   const [error, setError] = useState('');
   const [fieldErrors, setFieldErrors] = useState({});
   const [busy, setBusy] = useState(false);
@@ -236,6 +237,7 @@ export default function BookingForm() {
     const requestedService = params.get('service');
     const requestedVehicle = params.get('vehicle');
     const service = requestedService === 'vehicle-care' ? 'vehicle-care' : 'complete';
+    setServicePreview(service);
     const hasPreselectedService = requestedService === 'vehicle-care' || requestedService === 'complete';
     const group = params.get('offer') === 'group' || requested >= 3;
 
@@ -617,7 +619,7 @@ export default function BookingForm() {
           </div>
 
           <div className="grid lg:grid-cols-[1fr_290px]">
-            <div className="overflow-x-hidden p-4 pb-36 sm:p-7 sm:pb-28 md:p-8">
+            <div className={`overflow-x-hidden p-4 sm:p-7 md:p-8 ${step === 1 ? 'pb-5 sm:pb-7' : 'pb-36 sm:pb-28'}`}>
               <div
                 ref={stepTopRef}
                 key={`${step}-${slideDirection}`}
@@ -682,40 +684,113 @@ export default function BookingForm() {
 
                 {step === 1 && (
                   <div>
-                    <span className="font-label text-[10px] text-[var(--terracotta-600)]">CHOOSE YOUR CARE</span>
-                    <h2 className="font-display mt-1 text-2xl text-[var(--teal-900)]">Pick one service to book.</h2>
-                    <p className="font-body mt-1 text-sm text-[var(--ink-muted)]">Swipe sideways to compare, then book the service you want.</p>
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <span className="font-label text-[10px] text-[var(--terracotta-600)]">CHOOSE YOUR CARE</span>
+                        <h2 className="font-display mt-1 text-2xl text-[var(--teal-900)]">Choose your service.</h2>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => goToStep(0, 'back')}
+                        className="btn-ghost-teal hidden min-h-[42px] items-center gap-2 sm:inline-flex"
+                      >
+                        <ArrowLeft size={16} /> Back
+                      </button>
+                    </div>
+
+                    <div className="mt-4 grid grid-cols-2 gap-1 rounded-[18px] border border-[var(--teal-100)] bg-[var(--cream-50)] p-1.5">
+                      <button
+                        type="button"
+                        onClick={() => setServicePreview('complete')}
+                        className={`min-h-[46px] rounded-[14px] px-3 font-body text-sm font-extrabold transition ${
+                          servicePreview === 'complete'
+                            ? 'bg-[var(--teal-900)] text-white shadow-sm'
+                            : 'text-[var(--teal-900)]'
+                        }`}
+                      >
+                        {allHeavyVehicles ? 'Heavy Wash' : 'Complete Care'}
+                      </button>
+                      {!hasHeavyVehicle ? (
+                        <button
+                          type="button"
+                          onClick={() => setServicePreview('vehicle-care')}
+                          className={`min-h-[46px] rounded-[14px] px-3 font-body text-sm font-extrabold transition ${
+                            servicePreview === 'vehicle-care'
+                              ? 'bg-[var(--teal-900)] text-white shadow-sm'
+                              : 'text-[var(--teal-900)]'
+                          }`}
+                        >
+                          Vehicle Care
+                        </button>
+                      ) : (
+                        <div className="flex min-h-[46px] items-center justify-center rounded-[14px] px-3 font-body text-xs font-bold text-[var(--ink-muted)]">
+                          Cars only
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="mt-4">
+                      {servicePreview === 'complete' || hasHeavyVehicle ? (
+                        <div className="service-choice active !min-w-0">
+                          <div className="flex items-start gap-3">
+                            <span className="service-choice-icon shrink-0"><Car size={23}/></span>
+                            <div>
+                              <span className="font-label text-[9px]">
+                                {allHeavyVehicles ? 'HEAVY VEHICLE WASH' : 'COMPLETE CARE WASH'}
+                              </span>
+                              <strong className="mt-1 !text-2xl">
+                                {allHeavyVehicles ? 'Heavy vehicle cleaning at your location.' : 'A fresh start, inside and out.'}
+                              </strong>
+                            </div>
+                          </div>
+                          <small className="mt-3">
+                            {allHeavyVehicles
+                              ? 'Pricing is based on the selected heavy vehicle type.'
+                              : 'Foam Wash + Underbody Wash + Interior Detailing at your doorstep.'}
+                          </small>
+                          <b className="mt-3">
+                            {multipleVehicles ? `Estimated base ₹${completeBaseTotal}` : `₹${completeBaseTotal}`}
+                          </b>
+                          {multipleVehicles && <small className="selected-service-breakdown">{vehiclePriceBreakdown}</small>}
+                          <button
+                            type="button"
+                            onClick={() => bookService('complete')}
+                            className="btn-primary booking-action-spark mt-4 flex w-full items-center justify-center gap-2"
+                          >
+                            {allHeavyVehicles ? 'Book heavy wash' : 'Book complete care'} <ArrowRight size={16}/>
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="service-choice care !min-w-0">
+                          <div className="flex items-start gap-3">
+                            <span className="service-choice-icon shrink-0"><KeyRound size={23}/></span>
+                            <div>
+                              <span className="font-label text-[9px]">VEHICLE CARE VISIT</span>
+                              <strong className="mt-1 !text-2xl">Away from home? We’ll check in on your car.</strong>
+                            </div>
+                          </div>
+                          <small className="mt-3">
+                            Visual check, start-up, short run/drive where safe, Complete Care Wash + photo/video update.
+                          </small>
+                          <b className="mt-3">₹1000 per vehicle</b>
+                          <button
+                            type="button"
+                            onClick={() => bookService('vehicle-care')}
+                            className="btn-primary booking-action-spark mt-4 flex w-full items-center justify-center gap-2"
+                          >
+                            Book vehicle care <ArrowRight size={16}/>
+                          </button>
+                        </div>
+                      )}
+                    </div>
 
                     <button
                       type="button"
                       onClick={() => goToStep(0, 'back')}
-                      className="btn-ghost-teal mt-4 inline-flex min-h-[44px] items-center gap-2"
+                      className="btn-ghost-teal mt-4 inline-flex min-h-[44px] items-center gap-2 sm:hidden"
                     >
                       <ArrowLeft size={17} /> Back to vehicles
                     </button>
-
-                    <div className="mt-5 flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2 md:grid md:grid-cols-2 md:overflow-visible md:pb-0">
-                      <div className="service-choice active min-w-[86%] snap-start sm:min-w-[72%] md:min-w-0">
-                        <span className="service-choice-icon"><Car size={24}/></span>
-                        <span className="font-label text-[9px]">{allHeavyVehicles ? 'HEAVY VEHICLE WASH' : 'COMPLETE CARE WASH'}</span>
-                        <strong>{allHeavyVehicles ? 'Heavy vehicle cleaning at your location.' : 'A fresh start, inside and out.'}</strong>
-                        <small>{allHeavyVehicles ? 'Pricing is based on the selected heavy vehicle type.' : 'Foam Wash + Underbody Wash + Interior Detailing at your doorstep.'}</small>
-                        <b>{multipleVehicles ? `Estimated base ₹${completeBaseTotal}` : `₹${completeBaseTotal}`}</b>
-                        {multipleVehicles && <small className="selected-service-breakdown">{vehiclePriceBreakdown}</small>}
-                        <button type="button" onClick={()=>bookService('complete')} className="btn-primary mt-4 flex w-full items-center justify-center gap-2">{allHeavyVehicles ? 'Book heavy wash' : 'Book complete care'} <ArrowRight size={16}/></button>
-                      </div>
-
-                      {!hasHeavyVehicle && (
-                        <div className={`service-choice care min-w-[86%] snap-start sm:min-w-[72%] md:min-w-0 ${form.serviceType==='vehicle-care'?'active':''}`}>
-                          <span className="service-choice-icon"><KeyRound size={24}/></span>
-                          <span className="font-label text-[9px]">VEHICLE CARE VISIT</span>
-                          <strong>Away from home? We’ll check in on your car.</strong>
-                          <small>Visual check, start-up, short run/drive where safe, Complete Care Wash + photo/video update.</small>
-                          <b>₹1000 per vehicle</b>
-                          <button type="button" onClick={()=>bookService('vehicle-care')} className="btn-primary mt-4 flex w-full items-center justify-center gap-2">Book vehicle care <ArrowRight size={16}/></button>
-                        </div>
-                      )}
-                    </div>
                   </div>
                 )}
 
@@ -965,9 +1040,6 @@ export default function BookingForm() {
           :global(.booking-mobile-actions) {
             bottom: calc(74px + env(safe-area-inset-bottom));
           }
-        }
-        :global(.service-choice) {
-          scrollbar-width: none;
         }
         :global(.booking-action-spark)::after {
           content: '';
