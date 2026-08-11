@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import {
   ArrowRight,
   BadgePercent,
@@ -32,8 +32,21 @@ const TABS = [
 
 export default function PricingSection() {
   const [tab, setTab] = useState('wash');
+  const contentRef = useRef(null);
   const go = (url) => { window.location.href = url; };
   const addOns = CORE_SERVICES.filter((service) => service.selectable);
+
+  const chooseTab = (nextTab) => {
+    setTab(nextTab);
+    window.requestAnimationFrame(() => {
+      window.setTimeout(() => {
+        const node = contentRef.current;
+        if (!node) return;
+        const top = node.getBoundingClientRect().top + window.scrollY - 86;
+        window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+      }, 30);
+    });
+  };
 
   return (
     <section id="pricing" className="relative bg-[var(--cream-100)] px-3 pb-16 pt-5 sm:px-6 md:pb-24 md:pt-10">
@@ -44,31 +57,26 @@ export default function PricingSection() {
             Choose what you need.
           </h1>
           <p className="font-body mt-2 max-w-2xl text-sm leading-6 text-[var(--ink-muted)]">
-            Wash, vehicle care or extras — switch tabs instead of scrolling through everything.
+            Complete washes, vehicle care and optional finishing services — all in one place.
           </p>
         </div>
 
-        {/* Offer is deliberately high on the page so customers cannot miss it. */}
-        <div className="mb-5 overflow-hidden rounded-[24px] bg-[var(--teal-900)] p-4 text-white shadow-[0_12px_35px_rgba(18,49,48,.16)] sm:flex sm:items-center sm:justify-between sm:gap-5 sm:p-5">
-          <div className="flex gap-3">
-            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[var(--gold-400)] text-[var(--teal-900)]">
-              <BadgePercent size={22} />
+        <div className="mb-4 flex items-center gap-3 rounded-[18px] border border-[var(--gold-400)]/60 bg-[var(--teal-900)] px-3.5 py-3 text-white shadow-[0_8px_24px_rgba(18,49,48,.12)] sm:px-4">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[var(--gold-400)] text-[var(--teal-900)]">
+            <BadgePercent size={19} />
+          </span>
+          <div className="min-w-0 flex-1">
+            <strong className="font-display block text-lg leading-tight">3 cars · same location · 10% off</strong>
+            <span className="font-body mt-0.5 block text-[11px] leading-4 text-[var(--teal-100)]">
+              Complete Care Wash for 3 or more cars booked together.
             </span>
-            <div>
-              <span className="font-label text-[9px] text-[var(--gold-400)]">SAME-LOCATION OFFER</span>
-              <h2 className="font-display mt-1 text-2xl">3 cars. Same place. 10% off.</h2>
-              <p className="font-body mt-1 text-xs leading-5 text-[var(--teal-100)]">
-                Book 3 or more cars in one Complete Care booking at the same location.
-                The 10% wash discount is calculated automatically.
-              </p>
-            </div>
           </div>
           <button
             type="button"
             onClick={() => go('/book?vehicles=3&offer=group&service=complete')}
-            className="btn-primary mt-4 flex w-full shrink-0 items-center justify-center gap-2 sm:mt-0 sm:w-auto"
+            className="shrink-0 rounded-full bg-[var(--gold-400)] px-3 py-2 font-body text-[11px] font-extrabold text-[var(--teal-900)]"
           >
-            Book 3 cars & save <ArrowRight size={16} />
+            Book offer
           </button>
         </div>
 
@@ -77,7 +85,7 @@ export default function PricingSection() {
             <button
               key={item.id}
               type="button"
-              onClick={() => setTab(item.id)}
+              onClick={() => chooseTab(item.id)}
               className={`min-h-[46px] rounded-[15px] px-2 font-body text-xs font-extrabold transition sm:text-sm ${
                 tab === item.id
                   ? 'bg-[var(--teal-900)] text-white shadow-sm'
@@ -89,6 +97,7 @@ export default function PricingSection() {
           ))}
         </div>
 
+        <div ref={contentRef} className="scroll-mt-24">
         {tab === 'wash' && (
           <div className="overflow-hidden rounded-[28px] bg-white shadow-[0_18px_50px_rgba(18,49,48,0.10)]">
             <div className="bg-[var(--teal-900)] p-6 text-white sm:p-8">
@@ -114,9 +123,7 @@ export default function PricingSection() {
                 <Price icon={Car} label="5-Seater" amount={priceForPackage('5-Seater')} />
                 <Price icon={Users} label="7-Seater" amount={priceForPackage('7-Seater')} />
 
-                <button
-                  type="button"
-                  onClick={() => go('/book?service=complete&vehicle=heavy')}
+                <div
                   className="group relative overflow-hidden rounded-2xl border-2 border-[var(--gold-400)] bg-[linear-gradient(120deg,var(--teal-900),var(--teal-700))] p-4 text-left shadow-[0_10px_26px_rgba(18,49,48,.18)]"
                 >
                   <Sparkles className="absolute right-3 top-3 animate-pulse text-[var(--gold-400)]" size={18} />
@@ -129,10 +136,7 @@ export default function PricingSection() {
                   <span className="font-body mt-1 block text-[11px] text-[var(--teal-100)]">
                     {HEAVY_VEHICLE_TYPES.map((item) => item.label).join(' · ')}
                   </span>
-                  <span className="font-body mt-2 inline-flex items-center gap-1 text-[11px] font-extrabold text-[var(--gold-400)]">
-                    Choose heavy vehicle <ArrowRight size={13} />
-                  </span>
-                </button>
+                </div>
 
                 <button
                   type="button"
@@ -207,6 +211,7 @@ export default function PricingSection() {
             </button>
           </div>
         )}
+        </div>
       </div>
     </section>
   );

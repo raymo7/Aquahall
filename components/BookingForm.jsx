@@ -511,9 +511,9 @@ export default function BookingForm() {
 
   function goToStep(targetStep, direction = 'forward') {
     setSlideDirection(direction);
-    setStep(Math.max(0, Math.min(3, targetStep)));
+    setStep(Math.max(0, Math.min(STEPS.length - 1, targetStep)));
 
-    // The Service step can be much taller than the next steps.
+    // Some booking steps are much taller than the next steps.
     // After switching panels, bring only the changing step area back into view
     // so the customer sees the TOP of the new step instead of landing near its bottom.
     window.setTimeout(() => {
