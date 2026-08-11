@@ -908,7 +908,6 @@ export default function BookingForm() {
                   </div>
                 </>
               )}
-              )}
             </div>
 
             <aside className="hidden bg-[var(--teal-900)] p-6 text-white lg:block">
