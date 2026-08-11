@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { resolveBooking, VEHICLE_TYPES } from '../../../lib/pricing';
+import { categoryForVehicle, resolveBooking, VEHICLE_TYPES } from '../../../lib/pricing';
 import { insertBooking } from '../../../lib/db';
 import { sendBookingEmails } from '../../../lib/email';
 import { evaluateAvailability } from '../../../lib/availability';
@@ -11,19 +11,36 @@ const bad = (code, message, status = 400) => NextResponse.json({ code, message }
 
 export async function POST(request) {
   let body;
-  try { body = await request.json(); } catch { return bad('INVALID_REQUEST', 'The booking request could not be read. Please try again.'); }
+  try {
+    body = await request.json();
+  } catch {
+    return bad('INVALID_REQUEST', 'The booking request could not be read. Please try again.');
+  }
 
-  const { name, phone, email, vehicleType, vehicleModel, vehicles, vehicleCount, serviceType = 'complete', groupOffer, groupLocationMode, careStarting, unusedDuration, drivePermission, keyInstructions, alacarte, address, mapAddress, landmark, placeId,
-    latitude, longitude, date, slotId, notes, paymentMethod } = body || {};
+  const {
+    name, phone, email, vehicleType, vehicleModel, vehicles, vehicleCount,
+    serviceType = 'complete', groupOffer, groupLocationMode,
+    careStarting, unusedDuration, drivePermission, keyInstructions,
+    alacarte, address, mapAddress, landmark, placeId,
+    latitude, longitude, date, slotId, notes, paymentMethod,
+  } = body || {};
 
   if (!name || name.trim().length < 2 || name.length > 120) return bad('INVALID_NAME', 'Enter your full name.');
   if (!/^\d{10}$/.test(String(phone || '').replace(/\D/g, ''))) return bad('INVALID_PHONE', 'Enter an exact 10-digit mobile number.');
   if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return bad('INVALID_EMAIL', 'Enter a valid email address or leave it blank.');
   if (!VEHICLE_TYPES.some((vehicle) => vehicle.value === vehicleType)) return bad('INVALID_VEHICLE', 'Choose a valid vehicle type.');
-  const cleanVehicles = Array.isArray(vehicles) && vehicles.length ? vehicles.slice(0,4) : [{ type: vehicleType, model: vehicleModel || '' }];
-  if (cleanVehicles.some((item) => !VEHICLE_TYPES.some((vehicle) => vehicle.value === item.type))) return bad('INVALID_VEHICLES', 'Choose a valid type for every vehicle.');
-  if (!['complete','vehicle-care'].includes(serviceType)) return bad('INVALID_SERVICE', 'Choose a valid Aqua Haul service.');
+
+  const cleanVehicles = Array.isArray(vehicles) && vehicles.length
+    ? vehicles.slice(0, 4)
+    : [{ type: vehicleType, model: vehicleModel || '' }];
+
+  if (cleanVehicles.some((item) => !VEHICLE_TYPES.some((vehicle) => vehicle.value === item.type))) {
+    return bad('INVALID_VEHICLES', 'Choose a valid type for every vehicle.');
+  }
+
+  if (!['complete', 'vehicle-care'].includes(serviceType)) return bad('INVALID_SERVICE', 'Choose a valid Aqua Haul service.');
   if (serviceType === 'vehicle-care' && !drivePermission) return bad('DRIVE_PERMISSION_REQUIRED', 'Owner permission is required for the short vehicle run/drive.');
+
   if (!address || address.trim().length < 5 || address.length > MAX_LEN) return bad('INVALID_ADDRESS', 'Enter your house name or exact address.');
   if (!mapAddress || mapAddress.trim().length < 3 || mapAddress.length > MAX_LEN) return bad('INVALID_MAP_LOCATION', 'Select a valid place or use your current location.');
   if (landmark && landmark.length > MAX_LEN) return bad('LANDMARK_TOO_LONG', 'Landmark or directions must be under 500 characters.');
@@ -47,30 +64,93 @@ export async function POST(request) {
       SLOT_STARTED: 'This slot has already started. Choose a later slot.',
       LAST_MINUTE_WHATSAPP: 'This is a last-minute request. Check availability on WhatsApp.',
     };
-    return bad(selected?.reasonCode || 'SLOT_UNAVAILABLE', messages[selected?.reasonCode] || selected?.reason || 'This slot is no longer available.', 409);
+    return bad(
+      selected?.reasonCode || 'SLOT_UNAVAILABLE',
+      messages[selected?.reasonCode] || selected?.reason || 'This slot is no longer available.',
+      409,
+    );
   }
 
-  const resolved = resolveBooking({ vehicleType, vehicles: cleanVehicles, serviceType, alacarte });
+  // Server-side eligibility is authoritative. Client input cannot force a discount.
+  const eligibleGroupOffer = Boolean(
+    groupOffer &&
+    cleanVehicles.length >= 3 &&
+    serviceType === 'complete' &&
+    cleanVehicles.every((vehicle) => categoryForVehicle(vehicle.type) !== 'heavy')
+  );
+
+  const resolved = resolveBooking({
+    vehicleType,
+    vehicles: cleanVehicles,
+    serviceType,
+    alacarte,
+    groupOffer: eligibleGroupOffer,
+  });
+
   try {
     const booking = await insertBooking({
-      name: name.trim(), phone: String(phone).replace(/\D/g, ''), email: email?.trim() || null,
-      vehicleType: cleanVehicles[0].type, vehicleModel: cleanVehicles[0].model?.trim() || null, category: resolved.category,
-      vehicleCount: cleanVehicles.length, vehicles: cleanVehicles, serviceType: resolved.serviceType, groupOffer: Boolean(groupOffer && cleanVehicles.length >= 3), groupLocationMode: groupLocationMode || null,
-      careDetails: serviceType === 'vehicle-care' ? { starting: careStarting || 'not-sure', unusedDuration: unusedDuration || '', drivePermission: Boolean(drivePermission), keyInstructions: keyInstructions?.trim() || '' } : null,
-      packageId: resolved.packageId, alacarte: resolved.alacarte, services: resolved.services,
-      address: address.trim(), mapAddress: mapAddress.trim(), landmark: landmark?.trim() || null, placeId: placeId || null, latitude: Number(latitude), longitude: Number(longitude),
-      date, time: selected.label, slotId, notes: notes?.trim() || null, amount: resolved.amount,
-      paymentMethod, distanceFromBaseKm: selected.distanceFromBaseKm,
+      name: name.trim(),
+      phone: String(phone).replace(/\D/g, ''),
+      email: email?.trim() || null,
+
+      vehicleType: cleanVehicles[0].type,
+      vehicleModel: cleanVehicles[0].model?.trim() || null,
+      category: resolved.category,
+
+      vehicleCount: cleanVehicles.length,
+      vehicles: cleanVehicles,
+      serviceType: resolved.serviceType,
+      groupOffer: eligibleGroupOffer,
+      // Only one offer mode now exists: all cars at the same location.
+      groupLocationMode: eligibleGroupOffer ? 'same' : null,
+
+      careDetails: serviceType === 'vehicle-care'
+        ? {
+            starting: careStarting || 'not-sure',
+            unusedDuration: unusedDuration || '',
+            drivePermission: Boolean(drivePermission),
+            keyInstructions: keyInstructions?.trim() || '',
+          }
+        : null,
+
+      packageId: resolved.packageId,
+      alacarte: resolved.alacarte,
+      services: resolved.services,
+
+      address: address.trim(),
+      mapAddress: mapAddress.trim(),
+      landmark: landmark?.trim() || null,
+      placeId: placeId || null,
+      latitude: Number(latitude),
+      longitude: Number(longitude),
+
+      date,
+      time: selected.label,
+      slotId,
+      notes: notes?.trim() || null,
+      amount: resolved.amount,
+
+      paymentMethod,
+      distanceFromBaseKm: selected.distanceFromBaseKm,
       travelMinutesFromPrevious: selected.travelMinutesFromPrevious,
-      travelMinutesToNext: selected.travelMinutesToNext, locationStatus: selected.locationStatus,
+      travelMinutesToNext: selected.travelMinutesToNext,
+      locationStatus: selected.locationStatus,
     });
-    try { await sendBookingEmails(booking); } catch (error) { console.error('sendBookingEmails failed:', error); }
+
+    try {
+      await sendBookingEmails(booking);
+    } catch (error) {
+      console.error('sendBookingEmails failed:', error);
+    }
+
     return NextResponse.json({ booking }, { status: 201 });
   } catch (error) {
     console.error('booking insert failed:', error);
+
     if (String(error.message).includes('bookings_active_slot_unique')) {
       return bad('SLOT_JUST_TAKEN', 'Another customer just booked this slot. Choose another available slot.', 409);
     }
+
     return bad('BOOKING_SAVE_FAILED', 'We could not save your booking. Please try again or contact Aqua Haul on WhatsApp.', 500);
   }
 }
