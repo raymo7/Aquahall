@@ -59,6 +59,7 @@ export async function POST(request) {
       paymentMethod = 'onsite',
       paid = false,
       status = 'received',
+      source = 'admin',
       amount,
     } = body || {};
 
@@ -136,8 +137,8 @@ export async function POST(request) {
       time,
       slotId: null,
       notes: notes?.trim()
-        ? `[Manual admin entry] ${notes.trim()}`
-        : '[Manual admin entry]',
+        ? `[Manual admin entry][Source: ${source === 'phone' ? 'phone' : 'admin'}] ${notes.trim()}`
+        : `[Manual admin entry][Source: ${source === 'phone' ? 'phone' : 'admin'}]`,
       amount: auditedAmount,
       paymentMethod,
       distanceFromBaseKm: null,
