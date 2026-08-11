@@ -33,7 +33,7 @@ export default function HomeSpotlight() {
   const [index, setIndex] = useState(0);
 
   useEffect(() => {
-    const timer = window.setInterval(() => setIndex((current) => (current + 1) % SLIDES.length), 5200);
+    const timer = window.setInterval(() => setIndex((current) => (current + 1) % SLIDES.length), 3400);
     return () => window.clearInterval(timer);
   }, []);
 
@@ -51,28 +51,67 @@ export default function HomeSpotlight() {
 
           {slide.id === 'intro' && <>
             <div className="mt-6 grid max-w-[570px] grid-cols-2 gap-3">
-              <Link href="/book" className="hero-book-pulse btn-primary inline-flex min-h-[52px] items-center justify-center gap-2">Book your care <ArrowRight size={18}/></Link>
-              <Link href="/services" className="inline-flex min-h-[52px] items-center justify-center rounded-full border-2 border-white bg-[rgba(8,42,40,.62)] px-4 font-bold text-white">Explore services</Link>
+              <Link href="/book" className="hero-book-spark btn-primary inline-flex min-h-[52px] items-center justify-center gap-2">Book your care <ArrowRight size={18}/></Link>
+              <Link href="/services" className="inline-flex min-h-[52px] items-center justify-center rounded-full border-2 border-white bg-[rgba(8,42,40,.82)] px-4 font-bold !text-white shadow-[0_8px_24px_rgba(0,0,0,.24)] backdrop-blur-sm">Explore services</Link>
             </div>
             <div className="mt-5 grid max-w-[610px] grid-cols-3 gap-2 text-[11px] text-[var(--teal-100)] sm:text-sm"><span className="hero-pill justify-center"><Droplets size={15}/> Own water</span><span className="hero-pill justify-center"><Zap size={15}/> Own power</span><span className="hero-pill justify-center"><ShieldCheck size={15}/> Professional care</span></div>
             <div className="mt-5 border-l-2 border-[var(--gold-400)] pl-4"><p className="font-display text-lg leading-relaxed text-[var(--cream-50)] sm:text-xl" lang="ml">വെള്ളം വേണ്ട, കറന്റ് വേണ്ട — Aqua Haul വന്നാൽ മതി! 💧⚡</p></div>
           </>}
 
-          {slide.id === 'services' && <div className="mt-6 flex flex-wrap gap-2"><Link href="/book?service=complete" className="btn-primary inline-flex items-center gap-2">Book a wash <ArrowRight size={17}/></Link><Link href="/services" className="inline-flex items-center gap-2 rounded-full border border-white/70 bg-white/10 px-5 py-3 font-bold text-white">See all services</Link></div>}
+          {slide.id === 'services' && (
+            <div className="mt-6 flex flex-wrap gap-2">
+              <Link href="/book" className="hero-book-spark btn-primary inline-flex items-center gap-2">
+                Book your care <ArrowRight size={17}/>
+              </Link>
+              <Link
+                href="/services"
+                className="inline-flex items-center gap-2 rounded-full border-2 border-white bg-[rgba(8,42,40,.82)] px-5 py-3 font-bold !text-white shadow-[0_8px_24px_rgba(0,0,0,.24)] backdrop-blur-sm"
+              >
+                Explore services
+              </Link>
+            </div>
+          )}
 
-          {slide.id === 'group' && <div className="mt-6"><Link href="/book?vehicles=3&offer=group&service=complete" className="btn-primary inline-flex items-center gap-2"><Users size={18}/> Book 3 vehicles & save <ArrowRight size={17}/></Link></div>}
+          {slide.id === 'group' && <div className="mt-6"><Link href="/book?vehicles=3&offer=group&service=complete" className="hero-book-spark btn-primary inline-flex items-center gap-2"><Users size={18}/> Book 3 vehicles & save <ArrowRight size={17}/></Link></div>}
 
           <div className="mt-7 flex items-center gap-2" aria-label="Homepage highlights">
             {SLIDES.map((item, itemIndex) => <button key={item.id} type="button" onClick={()=>setIndex(itemIndex)} className={`h-2 rounded-full transition-all ${itemIndex===index?'w-8 bg-[var(--gold-400)]':'w-2 bg-white/45'}`} aria-label={`Show ${item.eyebrow}`} />)}
-            <span className="font-body ml-2 text-[10px] text-white/65">Auto rotates</span>
+            
           </div>
         </div>
       </div>
 
       <style jsx>{`
-        @keyframes carePulse { 0%,100% { transform:scale(1); box-shadow:0 10px 28px rgba(209,88,42,.28); } 50% { transform:scale(1.025); box-shadow:0 12px 34px rgba(209,88,42,.48); } }
-        :global(.hero-book-pulse){ animation:carePulse 1.8s ease-in-out infinite; }
-        @media (prefers-reduced-motion:reduce){ :global(.hero-book-pulse){animation:none;} }
+        @keyframes carePulse {
+          0%,100% { transform:scale(1); box-shadow:0 9px 26px rgba(209,88,42,.28); }
+          50% { transform:scale(1.035); box-shadow:0 12px 36px rgba(238,178,67,.56); }
+        }
+        @keyframes careSpark {
+          0% { transform:translateX(-180%) rotate(18deg); opacity:0; }
+          18% { opacity:1; }
+          55% { opacity:.7; }
+          78%,100% { transform:translateX(440%) rotate(18deg); opacity:0; }
+        }
+        :global(.hero-book-spark){
+          position:relative;
+          overflow:hidden;
+          animation:carePulse 1.05s ease-in-out infinite;
+        }
+        :global(.hero-book-spark)::after{
+          content:'';
+          position:absolute;
+          top:-65%;
+          left:0;
+          width:22%;
+          height:230%;
+          pointer-events:none;
+          background:linear-gradient(90deg,transparent,rgba(255,255,255,.9),transparent);
+          animation:careSpark 1.45s ease-in-out infinite;
+        }
+        @media (prefers-reduced-motion:reduce){
+          :global(.hero-book-spark),
+          :global(.hero-book-spark)::after{animation:none;}
+        }
       `}</style>
     </section>
   );

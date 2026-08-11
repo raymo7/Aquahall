@@ -616,7 +616,7 @@ export default function BookingForm() {
           </div>
 
           <div className="grid lg:grid-cols-[1fr_290px]">
-            <div className="overflow-x-hidden p-4 pb-28 sm:p-7 sm:pb-28 md:p-8">
+            <div className="overflow-x-hidden p-4 pb-44 sm:p-7 sm:pb-28 md:p-8">
               <div
                 ref={stepTopRef}
                 key={`${step}-${slideDirection}`}
@@ -677,6 +677,14 @@ export default function BookingForm() {
                     <span className="font-label text-[10px] text-[var(--terracotta-600)]">CHOOSE YOUR CARE</span>
                     <h2 className="font-display mt-1 text-2xl text-[var(--teal-900)]">Pick one service to book.</h2>
                     <p className="font-body mt-1 text-sm text-[var(--ink-muted)]">Tap the Book button on the service you want.</p>
+
+                    <button
+                      type="button"
+                      onClick={() => goToStep(0, 'back')}
+                      className="btn-ghost-teal mt-4 inline-flex min-h-[44px] items-center gap-2"
+                    >
+                      <ArrowLeft size={17} /> Back to vehicles
+                    </button>
 
                     <div className="mt-5 grid gap-4 md:grid-cols-2">
                       <div className="service-choice active">
@@ -811,16 +819,95 @@ export default function BookingForm() {
               </div>
 
               {step !== 1 && (
-                <div className="sticky bottom-[82px] z-40 mt-5 rounded-[20px] border border-[var(--teal-100)] bg-white/95 p-2 shadow-[0_-8px_28px_rgba(18,49,48,.14)] backdrop-blur-md sm:bottom-3">
-                  <div className="mb-1.5 flex items-center justify-between px-2 text-[11px]">
-                    <span className="font-body text-[var(--ink-muted)]">{step === 0 ? `${form.vehicleCount} vehicle${form.vehicleCount>1?'s':''}` : step === 2 ? `${form.alacarte.length} extra${form.alacarte.length===1?'':'s'} selected` : selectedSlot?.label || 'Complete this step'}</span>
-                    <strong className="font-body text-[var(--teal-900)]">Est. ₹{resolved.amount}{resolved.variablePricing?'+':''}</strong>
+                <>
+                  {/* Mobile: a true viewport-following action bar. It stays above the
+                      bottom navigation while the customer scrolls long steps. */}
+                  <div className="fixed inset-x-3 bottom-[86px] z-[60] mx-auto max-w-[760px] rounded-[20px] border border-[var(--teal-100)] bg-white/96 p-2 shadow-[0_12px_40px_rgba(18,49,48,.24)] backdrop-blur-xl sm:hidden">
+                    <div className="mb-1.5 flex items-center justify-between px-2 text-[11px]">
+                      <span className="font-body text-[var(--ink-muted)]">
+                        {step === 0
+                          ? `${form.vehicleCount} vehicle${form.vehicleCount > 1 ? 's' : ''}`
+                          : step === 2
+                            ? `${form.alacarte.length} extra${form.alacarte.length === 1 ? '' : 's'} selected`
+                            : selectedSlot?.label || 'Complete this step'}
+                      </span>
+                      <strong className="font-body text-[var(--teal-900)]">
+                        Est. ₹{resolved.amount}{resolved.variablePricing ? '+' : ''}
+                      </strong>
+                    </div>
+
+                    <div className={`grid ${step > 0 ? 'grid-cols-[52px_1fr]' : 'grid-cols-1'} gap-2`}>
+                      {step > 0 && (
+                        <button
+                          type="button"
+                          onClick={() => goToStep(step - 1, 'back')}
+                          className="btn-ghost-teal flex min-h-[48px] items-center justify-center !px-0"
+                          aria-label="Back"
+                        >
+                          <ArrowLeft size={18} />
+                        </button>
+                      )}
+
+                      {step < 4 ? (
+                        <button
+                          type="button"
+                          onClick={next}
+                          disabled={step === 3 && outsideArea}
+                          className="btn-primary booking-action-spark flex min-h-[48px] items-center justify-center gap-2 disabled:opacity-50"
+                        >
+                          Continue <ArrowRight size={17} />
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={submit}
+                          disabled={busy}
+                          className="btn-primary booking-action-spark flex min-h-[48px] items-center justify-center gap-2"
+                        >
+                          {busy
+                            ? <><Loader2 size={17} className="animate-spin"/> Saving…</>
+                            : <>Confirm booking <ArrowRight size={17}/></>}
+                        </button>
+                      )}
+                    </div>
                   </div>
-                  <div className={`grid ${step > 0 ? 'grid-cols-[52px_1fr]' : 'grid-cols-1'} gap-2`}>
-                    {step > 0 && <button type="button" onClick={() => goToStep(step - 1, 'back')} className="btn-ghost-teal flex min-h-[48px] items-center justify-center !px-0" aria-label="Back"><ArrowLeft size={18}/></button>}
-                    {step < 4 ? <button type="button" onClick={next} disabled={step === 3 && outsideArea} className="btn-primary flex min-h-[48px] items-center justify-center gap-2 disabled:opacity-50">Continue <ArrowRight size={17}/></button> : <button type="button" onClick={submit} disabled={busy} className="btn-primary flex min-h-[48px] items-center justify-center gap-2">{busy ? <><Loader2 size={17} className="animate-spin"/> Saving…</> : <>Confirm booking <ArrowRight size={17}/></>}</button>}
+
+                  {/* Desktop/tablet: normal in-flow controls; no giant floating bar. */}
+                  <div className="mt-6 hidden items-center justify-between gap-3 sm:flex">
+                    {step > 0 ? (
+                      <button
+                        type="button"
+                        onClick={() => goToStep(step - 1, 'back')}
+                        className="btn-ghost-teal inline-flex items-center gap-2"
+                      >
+                        <ArrowLeft size={17}/> Back
+                      </button>
+                    ) : <span />}
+
+                    {step < 4 ? (
+                      <button
+                        type="button"
+                        onClick={next}
+                        disabled={step === 3 && outsideArea}
+                        className="btn-primary booking-action-spark inline-flex items-center gap-2 disabled:opacity-50"
+                      >
+                        Continue <ArrowRight size={17}/>
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={submit}
+                        disabled={busy}
+                        className="btn-primary booking-action-spark inline-flex items-center gap-2"
+                      >
+                        {busy
+                          ? <><Loader2 size={17} className="animate-spin"/> Saving…</>
+                          : <>Confirm booking <ArrowRight size={17}/></>}
+                      </button>
+                    )}
                   </div>
-                </div>
+                </>
+              )}
               )}
             </div>
 
@@ -845,7 +932,37 @@ export default function BookingForm() {
         .booking-step-slide.is-back { animation-name:bookingStepBack; }
         @keyframes bookingStepForward { from { opacity:0; transform:translate3d(26px,0,0); } to { opacity:1; transform:translate3d(0,0,0); } }
         @keyframes bookingStepBack { from { opacity:0; transform:translate3d(-26px,0,0); } to { opacity:1; transform:translate3d(0,0,0); } }
-        @media (prefers-reduced-motion:reduce){ .booking-step-slide{animation:none!important;} }
+        @keyframes bookingActionPulse {
+          0%, 100% { transform: scale(1); box-shadow: 0 9px 24px rgba(209,88,42,.24); }
+          50% { transform: scale(1.018); box-shadow: 0 10px 30px rgba(209,88,42,.42); }
+        }
+        @keyframes bookingSparkSweep {
+          0% { transform: translateX(-170%) rotate(18deg); opacity: 0; }
+          18% { opacity: .9; }
+          48% { opacity: .55; }
+          70%,100% { transform: translateX(390%) rotate(18deg); opacity: 0; }
+        }
+        :global(.booking-action-spark) {
+          position: relative;
+          overflow: hidden;
+          animation: bookingActionPulse 1.25s ease-in-out infinite;
+        }
+        :global(.booking-action-spark)::after {
+          content: '';
+          position: absolute;
+          top: -55%;
+          left: 0;
+          width: 22%;
+          height: 210%;
+          pointer-events: none;
+          background: linear-gradient(90deg, transparent, rgba(255,255,255,.85), transparent);
+          animation: bookingSparkSweep 1.8s ease-in-out infinite;
+        }
+        @media (prefers-reduced-motion:reduce){
+          .booking-step-slide{animation:none!important;}
+          :global(.booking-action-spark),
+          :global(.booking-action-spark)::after { animation:none!important; }
+        }
       `}</style>
     </section>
   );
