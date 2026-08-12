@@ -40,7 +40,7 @@ import PaymentPanel from './PaymentPanel';
 import WashMotionDivider from './WashMotionDivider';
 import WaveDivider from './WaveDivider';
 
-const WHATSAPP_NUMBER = '918921167141';
+const WHATSAPP_NUMBER = '918590914778';
 const STEPS = ['Vehicle', 'Service', 'Extras', 'Location', 'Review'];
 const ICONS = {
   '5-Seater': Car,
