@@ -46,12 +46,39 @@ export default function Gallery(){
       </div>
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4">
-        {items.map((item,i)=><button key={`${item.src}-${i}`} type="button" onClick={()=>setActive(item)} className={`group relative overflow-hidden rounded-[20px] border border-white/10 bg-[var(--teal-700)] text-left ${i%5===0?'row-span-2 aspect-[4/5]':'aspect-square'}`}>
-          <img src={item.type==='video'?item.poster:item.src} alt={item.title} loading="lazy" className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]" />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-transparent to-transparent" />
-          {item.type==='video'&&<span className="absolute right-3 top-3 grid h-9 w-9 place-items-center rounded-full bg-white/90 text-[var(--terracotta-600)]"><Play size={16} fill="currentColor"/></span>}
-          <span className="absolute bottom-3 left-3 right-3 text-sm font-bold text-white">{item.title}</span>
-        </button>)}
+        {items.map((item,i)=>(
+          <button
+            key={`${item.src}-${i}`}
+            type="button"
+            onClick={()=>setActive(item)}
+            className="group relative aspect-[4/5] overflow-hidden rounded-[20px] border border-white/10 bg-[var(--teal-800)] text-left"
+          >
+            {item.type === 'video' ? (
+              <>
+                <img
+                  src={item.poster}
+                  alt=""
+                  loading="lazy"
+                  className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.02]"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/72 via-black/5 to-transparent" />
+                <span className="absolute right-3 top-3 grid h-9 w-9 place-items-center rounded-full bg-white/92 text-[var(--terracotta-600)] shadow">
+                  <Play size={16} fill="currentColor"/>
+                </span>
+                <span className="absolute bottom-3 left-3 right-3 text-sm font-bold text-white">
+                  {item.title}
+                </span>
+              </>
+            ) : (
+              <img
+                src={item.src}
+                alt={item.title}
+                loading="lazy"
+                className="h-full w-full bg-[var(--cream-50)] object-contain"
+              />
+            )}
+          </button>
+        ))}
       </div>
 
       <div className="mt-8 rounded-[26px] border border-white/10 bg-white/5 p-5 sm:flex sm:items-center sm:justify-between sm:gap-5">
