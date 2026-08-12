@@ -145,7 +145,7 @@ function enquiryWhatsApp({ form, resolved, distance, requestedSlot }) {
     form.mapAddress ? `Place: ${form.mapAddress}` : null,
     mapsLink(form.latitude, form.longitude) ? `Google Maps: ${mapsLink(form.latitude, form.longitude)}` : null,
     form.landmark ? `Landmark: ${form.landmark}` : null,
-    distance != null ? `Approximate distance from Kuravilangadu: ${distance} km` : null,
+    distance != null ? `Distance from Aqua Haul Base Station: ${distance} km` : null,
     `Estimated service total: ₹${resolved.amount}${resolved.variablePricing ? ' + variable-priced add-on' : ''}`,
     form.notes ? `Notes: ${form.notes}` : null,
     '',
@@ -602,6 +602,7 @@ export default function BookingForm() {
     const ids = {
       name: 'booking-name',
       phone: 'booking-phone',
+      email: 'booking-email',
       address: 'booking-address',
       mapAddress: 'booking-map',
       drivePermission: 'booking-drive-permission',
@@ -624,6 +625,7 @@ export default function BookingForm() {
     const nextErrors = {};
     if (form.name.trim().length < 2) nextErrors.name = 'Enter your full name.';
     if (!/^\d{10}$/.test(form.phone)) nextErrors.phone = `Enter exactly 10 digits (${form.phone.length}/10 entered).`;
+    if (form.email && !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(form.email)) nextErrors.email = 'Enter a valid email address or leave it blank.';
     if (form.address.trim().length < 5) nextErrors.address = 'Enter your house name or exact address.';
     if (!Number.isFinite(Number(form.latitude)) || !Number.isFinite(Number(form.longitude))) nextErrors.mapAddress = 'Select a place from Google suggestions or use your current location.';
     if (form.serviceType === 'vehicle-care' && !form.drivePermission) nextErrors.drivePermission = 'Please confirm owner permission for the short vehicle run/drive.';
@@ -975,6 +977,20 @@ export default function BookingForm() {
                       <Field label="Full name" error={fieldErrors.name}><input id="booking-name" className="field" value={form.name} onChange={(event) => update('name', event.target.value)} /></Field>
                       <Field label="Phone" error={fieldErrors.phone}><input id="booking-phone" className="field" inputMode="numeric" maxLength={10} value={form.phone} onChange={(event) => update('phone', event.target.value.replace(/\D/g, ''))} placeholder="10-digit mobile number" /></Field>
                     </div>
+                    <div className="mt-4">
+                      <Field label="Email (optional)" error={fieldErrors.email}>
+                        <input
+                          id="booking-email"
+                          className="field"
+                          type="email"
+                          inputMode="email"
+                          autoComplete="email"
+                          value={form.email}
+                          onChange={(event) => update('email', event.target.value)}
+                          placeholder="For booking details, if you want"
+                        />
+                      </Field>
+                    </div>
 
                     <div className="mt-4"><Field label="House address" error={fieldErrors.address}><textarea id="booking-address" className="field" rows={2} value={form.address} onChange={(event) => update('address', event.target.value)} placeholder="House name, building, road and locality" /></Field></div>
 
@@ -993,12 +1009,12 @@ export default function BookingForm() {
                       <Field label="Notes (optional)"><input className="field" value={form.notes} onChange={(event) => update('notes', event.target.value)} placeholder="Landmark, gate directions or additional details" /></Field>
                     </div>
 
-                    {distance != null && !outsideArea && <p className="font-body mt-4 rounded-xl bg-[var(--teal-100)] px-4 py-3 text-sm text-[var(--teal-900)]">Approximate road distance: <strong>{distance} km</strong>{distance > 15 ? ' · Extended service area' : ''}</p>}
+                    {distance != null && !outsideArea && <p className="font-body mt-4 rounded-xl bg-[var(--teal-100)] px-4 py-3 text-sm text-[var(--teal-900)]">Distance from Aqua Haul Base Station: <strong>{distance} km</strong>{distance > 15 ? ' · Extended service area' : ''}</p>}
 
                     {outsideArea ? (
                       <div className="mt-5 rounded-3xl border-2 border-[var(--terracotta-500)] bg-[var(--terracotta-100)] p-5">
                         <h4 className="font-display text-xl text-[var(--teal-900)]">Check availability on WhatsApp</h4>
-                        <p className="font-body mt-2 text-sm">This location is about <strong>{distance} km</strong> from Kuravilangadu. We may still be able to serve it depending on the route.</p>
+                        <p className="font-body mt-2 text-sm">This location is about <strong>{distance} km</strong> from the Aqua Haul Base Station. We may still be able to serve it depending on the route.</p>
                         <a href={enquiryWhatsApp({ form, resolved, distance })} target="_blank" rel="noreferrer" className="btn-primary mt-4 flex w-full items-center justify-center gap-2"><MessageCircle size={18}/> Check on WhatsApp</a>
                       </div>
                     ) : (
