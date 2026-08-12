@@ -7,10 +7,10 @@ import { ArrowRight, Camera, ExternalLink, Images, Play, X } from 'lucide-react'
 const YOUTUBE = 'https://youtube.com/@aquahaul';
 
 const MEDIA = [
-  { type:'video', src:'/gallery/real/exterior-wash.mp4', thumb:'/gallery/real/thumbs/video-exterior.jpg', title:'Exterior wash in action' },
-  { type:'video', src:'/gallery/real/foam-wash.mp4', thumb:'/gallery/real/thumbs/video-foam.jpg', title:'Foam wash' },
-  { type:'video', src:'/gallery/real/cabin-steam.mp4', thumb:'/gallery/real/thumbs/video-cabin.jpg', title:'Cabin steaming' },
-  { type:'video', src:'/gallery/real/interior-steam.mp4', thumb:'/gallery/real/thumbs/video-interior.jpg', title:'Interior steam cleaning' },
+  { type:'video', src:'/gallery/real/featured-aqua-haul.mp4', poster:'/gallery/real/featured-aqua-haul.jpg', thumb:'/gallery/real/thumbs/video-featured-aqua-haul.jpg', title:'Aqua Haul doorstep cleaning' },
+  { type:'video', src:'/gallery/real/full-service-wash.mp4', poster:'/gallery/real/full-service-wash.jpg', thumb:'/gallery/real/thumbs/video-full-service-wash.jpg', title:'Full service wash' },
+  { type:'video', src:'/gallery/real/heavy-vehicle-wash-new.mp4', poster:'/gallery/real/heavy-vehicle-wash-new.jpg', thumb:'/gallery/real/thumbs/video-heavy-vehicle-wash-new.jpg', title:'Heavy vehicle wash' },
+  { type:'video', src:'/gallery/real/foam-wash-new.mp4', poster:'/gallery/real/foam-wash-new.jpg', thumb:'/gallery/real/thumbs/video-foam-wash-new.jpg', title:'Foam wash' },
 
   { type:'photo', src:'/gallery/real/work-4.jpg', thumb:'/gallery/real/thumbs/photo-work-4.jpg', title:'Aqua Haul work' },
   { type:'photo', src:'/gallery/real/work-6.jpg', thumb:'/gallery/real/thumbs/photo-work-6.jpg', title:'Aqua Haul work' },
@@ -37,8 +37,8 @@ export default function Gallery(){
       <button type="button" onClick={()=>setActive(featured)} className="group relative block aspect-[16/10] w-full overflow-hidden rounded-[28px] border border-white/10 bg-black text-left shadow-xl md:aspect-[16/7]">
         <img src={featured.thumb} alt={featured.title} className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.02]" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" />
-        <span className="absolute left-5 top-5 inline-flex items-center gap-2 rounded-full bg-white/90 px-3 py-2 text-xs font-bold text-[var(--teal-900)]"><Play size={15} fill="currentColor"/> Featured video</span>
-        <div className="absolute bottom-5 left-5 right-5"><h2 className="font-display text-2xl sm:text-3xl">{featured.title}</h2><p className="font-body mt-1 text-sm text-white/80">Tap to watch</p></div>
+        <span className="absolute left-5 top-5 inline-flex items-center gap-2 rounded-full bg-white/90 px-3 py-2 text-xs font-bold text-[var(--teal-900)]"><Play size={15} fill="currentColor"/> Featured work video</span>
+        <div className="absolute bottom-5 left-5 right-5"><h2 className="font-display text-2xl sm:text-3xl">{featured.title}</h2><p className="font-body mt-1 text-sm text-white/80">Tap to play</p></div>
       </button>
 
       <div className="my-7 grid grid-cols-3 rounded-full bg-white/10 p-1" aria-label="Gallery filter">
@@ -89,6 +89,6 @@ export default function Gallery(){
       <div className="mt-8 rounded-[28px] bg-[var(--cream-50)] p-6 text-center text-[var(--teal-900)]"><Camera className="mx-auto text-[var(--terracotta-600)]"/><h2 className="font-display mt-2 text-3xl">Like what you see?</h2><p className="font-body mt-2 text-sm text-[var(--ink-muted)]">Get Aqua Haul care at your doorstep.</p><Link href="/book" className="btn-primary hero-book-spark mt-5 inline-flex items-center gap-2">Book your care <ArrowRight size={17}/></Link></div>
     </div>
 
-    {active&&<div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 p-3" role="dialog" aria-modal="true" onClick={()=>setActive(null)}><button type="button" onClick={()=>setActive(null)} className="absolute right-4 top-4 z-10 grid h-11 w-11 place-items-center rounded-full bg-white text-black" aria-label="Close"><X/></button><div className="max-h-[88vh] w-full max-w-4xl overflow-hidden rounded-2xl bg-black" onClick={e=>e.stopPropagation()}>{active.type==='video'?<video src={active.src} poster={active.poster} controls autoPlay playsInline className="max-h-[88vh] w-full object-contain"/>:<img src={active.src} alt={active.title} className="max-h-[88vh] w-full object-contain"/>}</div></div>}
+    {active&&<div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 p-3" role="dialog" aria-modal="true" onClick={()=>setActive(null)}><button type="button" onClick={()=>setActive(null)} className="absolute right-4 top-4 z-10 grid h-11 w-11 place-items-center rounded-full bg-white text-black" aria-label="Close"><X/></button><div className="max-h-[88vh] w-full max-w-4xl overflow-hidden rounded-2xl bg-black" onClick={e=>e.stopPropagation()}>{active.type==='video'?<video src={active.src} poster={active.poster || active.thumb} controls autoPlay playsInline className="max-h-[88vh] w-full object-contain"/>:<img src={active.src} alt={active.title} className="max-h-[88vh] w-full object-contain"/>}</div></div>}
   </section>
 }
