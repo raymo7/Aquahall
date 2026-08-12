@@ -625,7 +625,7 @@ export default function BookingForm() {
     const nextErrors = {};
     if (form.name.trim().length < 2) nextErrors.name = 'Enter your full name.';
     if (!/^\d{10}$/.test(form.phone)) nextErrors.phone = `Enter exactly 10 digits (${form.phone.length}/10 entered).`;
-    if (form.email && !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(form.email)) nextErrors.email = 'Enter a valid email address or leave it blank.';
+    if (form.email?.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) nextErrors.email = 'Enter a valid email address or leave it blank.';
     if (form.address.trim().length < 5) nextErrors.address = 'Enter your house name or exact address.';
     if (!Number.isFinite(Number(form.latitude)) || !Number.isFinite(Number(form.longitude))) nextErrors.mapAddress = 'Select a place from Google suggestions or use your current location.';
     if (form.serviceType === 'vehicle-care' && !form.drivePermission) nextErrors.drivePermission = 'Please confirm owner permission for the short vehicle run/drive.';
