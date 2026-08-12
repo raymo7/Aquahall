@@ -7,17 +7,17 @@ import { ArrowRight, Camera, ExternalLink, Images, Play, X } from 'lucide-react'
 const YOUTUBE = 'https://youtube.com/@aquahaul';
 
 const MEDIA = [
-  { type:'video', src:'/gallery/real/exterior-wash.mp4', poster:'/gallery/real/exterior-wash.jpg', title:'Exterior wash in action' },
-  { type:'video', src:'/gallery/real/foam-wash.mp4', poster:'/gallery/real/foam-wash.jpg', title:'Foam wash' },
-  { type:'video', src:'/gallery/real/cabin-steam.mp4', poster:'/gallery/real/cabin-steam.jpg', title:'Cabin steaming' },
-  { type:'video', src:'/gallery/real/interior-steam.mp4', poster:'/gallery/real/interior-steam.jpg', title:'Interior steam cleaning' },
-  { type:'photo', src:'/gallery/real/work-6.jpg', title:'Foam wash' },
-  { type:'photo', src:'/gallery/real/work-1.jpg', title:'Aqua Haul work' },
-  { type:'photo', src:'/gallery/real/work-2.jpg', title:'Vehicle care' },
-  { type:'photo', src:'/gallery/real/work-3.jpg', title:'Recent work' },
-  { type:'photo', src:'/gallery/real/work-4.jpg', title:'Recent work' },
-  { type:'photo', src:'/gallery/real/work-5.jpg', title:'Doorstep car care' },
-  { type:'photo', src:'/gallery/real/work-7.jpg', title:'Aqua Haul' },
+  { type:'video', src:'/gallery/real/exterior-wash.mp4', thumb:'/gallery/real/thumbs/video-exterior.jpg', title:'Exterior wash in action' },
+  { type:'video', src:'/gallery/real/foam-wash.mp4', thumb:'/gallery/real/thumbs/video-foam.jpg', title:'Foam wash' },
+  { type:'video', src:'/gallery/real/cabin-steam.mp4', thumb:'/gallery/real/thumbs/video-cabin.jpg', title:'Cabin steaming' },
+  { type:'video', src:'/gallery/real/interior-steam.mp4', thumb:'/gallery/real/thumbs/video-interior.jpg', title:'Interior steam cleaning' },
+
+  { type:'photo', src:'/gallery/real/work-4.jpg', thumb:'/gallery/real/thumbs/photo-work-4.jpg', title:'Aqua Haul work' },
+  { type:'photo', src:'/gallery/real/work-6.jpg', thumb:'/gallery/real/thumbs/photo-work-6.jpg', title:'Aqua Haul work' },
+  { type:'photo', src:'/gallery/real/thumbs/photo-exterior.jpg', thumb:'/gallery/real/thumbs/photo-exterior.jpg', title:'Aqua Haul work' },
+  { type:'photo', src:'/gallery/real/thumbs/photo-foam.jpg', thumb:'/gallery/real/thumbs/photo-foam.jpg', title:'Aqua Haul work' },
+  { type:'photo', src:'/gallery/real/thumbs/photo-cabin.jpg', thumb:'/gallery/real/thumbs/photo-cabin.jpg', title:'Aqua Haul work' },
+  { type:'photo', src:'/gallery/real/thumbs/photo-interior.jpg', thumb:'/gallery/real/thumbs/photo-interior.jpg', title:'Aqua Haul work' },
 ];
 
 export default function Gallery(){
@@ -35,7 +35,7 @@ export default function Gallery(){
       </div>
 
       <button type="button" onClick={()=>setActive(featured)} className="group relative block aspect-[16/10] w-full overflow-hidden rounded-[28px] border border-white/10 bg-black text-left shadow-xl md:aspect-[16/7]">
-        <img src={featured.poster} alt={featured.title} className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.02]" />
+        <img src={featured.thumb} alt={featured.title} className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.02]" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" />
         <span className="absolute left-5 top-5 inline-flex items-center gap-2 rounded-full bg-white/90 px-3 py-2 text-xs font-bold text-[var(--teal-900)]"><Play size={15} fill="currentColor"/> Featured video</span>
         <div className="absolute bottom-5 left-5 right-5"><h2 className="font-display text-2xl sm:text-3xl">{featured.title}</h2><p className="font-body mt-1 text-sm text-white/80">Tap to watch</p></div>
@@ -56,7 +56,7 @@ export default function Gallery(){
             {item.type === 'video' ? (
               <>
                 <img
-                  src={item.poster}
+                  src={item.thumb}
                   alt=""
                   loading="lazy"
                   className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.02]"
@@ -71,10 +71,10 @@ export default function Gallery(){
               </>
             ) : (
               <img
-                src={item.src}
+                src={item.thumb || item.src}
                 alt={item.title}
                 loading="lazy"
-                className="h-full w-full bg-[var(--cream-50)] object-contain"
+                className="h-full w-full object-cover"
               />
             )}
           </button>
