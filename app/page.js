@@ -1,3 +1,5 @@
+import { isServicePaused } from '../lib/servicePause';
+import ServicePauseNotice from '../components/ServicePauseNotice';
 import PageShell from '../components/PageShell';
 import HomeSections from '../components/HomeSections';
 import SeoBusinessJsonLd from '../components/SeoBusinessJsonLd';
@@ -9,6 +11,8 @@ export const metadata = {
   alternates: { canonical: '/' },
 };
 
-export default function Home() {
-  return <PageShell><SeoBusinessJsonLd /><HomeSections /></PageShell>;
+export const dynamic = 'force-dynamic';
+export default async function Home() {
+  const paused = await isServicePaused();
+  return <PageShell><SeoBusinessJsonLd />{paused && <ServicePauseNotice compact />}<HomeSections /></PageShell>;
 }
