@@ -136,6 +136,8 @@ function initialManualBooking() {
 
 export default function AdminPanel({ open, onClose }) {
   const [password, setPassword] = useState('');
+  const [servicePaused, setServicePausedState] = useState(false);
+  const [pauseLoading, setPauseLoading] = useState(false);
   const [unlocked, setUnlocked] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -195,9 +197,27 @@ export default function AdminPanel({ open, onClose }) {
       setBookings(data.bookings || []);
       setEnquiries(data.enquiries || []);
       setBlocked(data.blockedSlots || []);
+      const statusResponse = await fetch('/api/admin/service-status', { cache: 'no-store' });
+      if (statusResponse.ok) setServicePausedState((await statusResponse.json()).paused);
+      else setError('Could not load service pause status.');
     } finally {
       setLoading(false);
     }
+  }
+
+  async function toggleServicePause() {
+    setPauseLoading(true); setError(''); setSuccess('');
+    try {
+      const response = await fetch('/api/admin/service-status', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ paused: !servicePaused }),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'Could not change service status');
+      setServicePausedState(result.paused);
+      setSuccess(result.paused ? 'Services paused. New website bookings are disabled.' : 'Services reopened. Website bookings are enabled.');
+    } catch (err) { setError(err.message); }
+    finally { setPauseLoading(false); }
   }
 
   async function login() {
@@ -363,6 +383,15 @@ export default function AdminPanel({ open, onClose }) {
           </div>
         ) : (
           <div>
+            <div className="mb-5 flex items-center justify-between gap-4 rounded-2xl border border-amber-200 bg-amber-50 p-4">
+              <div><p className="font-bold text-[var(--teal-900)]">Temporarily Pause Services</p>
+              <p className="mt-1 text-sm text-[var(--ink-muted)]">{servicePaused ? 'Paused — public notice visible; online bookings disabled.' : 'Active — accepting online bookings.'}</p></div>
+              <button type="button" role="switch" aria-checked={servicePaused} aria-label="Temporarily pause services"
+                disabled={pauseLoading} onClick={toggleServicePause}
+                className={`relative h-8 w-14 shrink-0 rounded-full transition-colors disabled:opacity-50 ${servicePaused ? 'bg-amber-600' : 'bg-gray-400'}`}>
+                <span className={`absolute top-1 h-6 w-6 rounded-full bg-white shadow transition-transform ${servicePaused ? 'left-7' : 'left-1'}`} />
+              </button>
+            </div>
             <div className="mb-5 flex gap-2 overflow-x-auto pb-1">
               {[
                 ['bookings', 'Bookings'],
